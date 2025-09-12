@@ -287,6 +287,32 @@ button, input[type="submit"], input[type="button"] {
 	z-index: 1000;
 }
 
+.logo-shadow {
+	position: fixed;
+	top: -20px;
+	left: -10px;
+	z-index: 999; /* behind the logo image (1000) */
+	width: 200px;
+	height: 200px;
+	pointer-events: none;
+	background: radial-gradient(circle at 50% 50%, rgba(47, 14, 112, 0.65) 0%, rgba(47, 14, 112, 0.65) 40%, rgba(255, 20, 147, 0.0) 70%);
+	filter: blur(14px);
+	border-radius: 16px;
+}
+
+[data-theme="light"] .logo-shadow {
+	position: fixed;
+	top: -20px;
+	left: -10px;
+	z-index: 999; /* behind the logo image (1000) */
+	width: 200px;
+	height: 200px;
+	pointer-events: none;
+	background: radial-gradient(circle at 50% 50%, rgba(135, 218, 243, 0.65) 0%, rgba(130, 212, 250, 0.65) 40%, rgba(255, 20, 147, 0.0) 70%);
+	filter: blur(14px);
+	border-radius: 16px;
+}
+
 /* Welcome text */
 .welcome-text {
 	margin: 0 0 20px 0;
@@ -438,6 +464,14 @@ button, input[type="submit"], input[type="button"] {
 		top: 12px;
 		left: 12px;
 	}
+
+	/* Match shadow size on medium screens */
+	.logo-shadow {
+		width: 80px;
+		height: 80px;
+		top: 12px;
+		left: 12px;
+	}
 	
 	/* Welcome text */
 	.welcome-text {
@@ -493,6 +527,14 @@ button, input[type="submit"], input[type="button"] {
 	/* Logo adjustments */
 	.logo-website-top-left {
 		max-width: 60px;
+		top: 8px;
+		left: 8px;
+	}
+
+	/* Match shadow size on small screens */
+	.logo-shadow {
+		width: 60px;
+		height: 60px;
 		top: 8px;
 		left: 8px;
 	}
@@ -606,6 +648,12 @@ button, input[type="submit"], input[type="button"] {
 	
 	.logo-website-top-left {
 		max-width: 50px;
+	}
+
+	/* Match shadow size on extra small screens */
+	.logo-shadow {
+		width: 50px;
+		height: 50px;
 	}
 	
 	.welcome-text {
