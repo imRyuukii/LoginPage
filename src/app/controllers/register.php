@@ -38,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
     <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"></button>
     <img src="../../public/images/logo.png" alt="Logo" class="logo-website-top-left">
+    <div class="logo-shadow"></div>
     <div class="container page">
         <div class="card">
             <h1>Register</h1>
