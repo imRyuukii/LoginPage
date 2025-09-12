@@ -15,6 +15,7 @@ $isLoggedIn = isset($_SESSION['user']);
 <body>
 	<button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"></button>
 	<img src="./src/public/images/logo.png" alt="Logo" class="logo-website-top-left">
+    <div class="logo-shadow"></div>
 	<div class="container page">
 		<div class="card">
 			<?php if ($isLoggedIn): ?>
@@ -34,7 +35,7 @@ $isLoggedIn = isset($_SESSION['user']);
 					<a class="button" href="./src/app/controllers/logout.php">Logout</a>
 				</p>
 			<?php else: ?>
-				<p>You are not logged in.</p>
+				<p>You are not logged in. Please log in to use our website.</p>
 				<p class="link-row mt-3">
 					<a class="button primary" href="./src/app/controllers/login.php">Login</a>
 				</p>
