@@ -7,8 +7,8 @@
         "email": "admin@example.com",
         "role": "admin",
         "created_at": "2025-09-05 22:14:06",
-        "last_active": "2025-09-07 22:55:15",
-        "last_activity": "2025-09-07 22:55:19"
+        "last_active": "2025-09-16 21:03:34",
+        "last_activity": "2025-09-16 21:03:34"
     },
     {
         "id": 2,
@@ -18,7 +18,7 @@
         "email": "test@example.com",
         "role": "user",
         "created_at": "2025-09-06 23:53:17",
-        "last_active": "2025-09-07 15:10:34",
-        "last_activity": "2025-09-07 15:10:34"
+        "last_active": "2025-09-16 21:03:26",
+        "last_activity": "2025-09-16 21:03:26"
     }
 ]
