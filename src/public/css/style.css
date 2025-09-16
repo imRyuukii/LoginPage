@@ -40,12 +40,8 @@
 }
 
 /* Smooth theme transition helper (enabled briefly during toggle) */
-.theme-transition, .theme-transition * {
-	transition: background-color .28s ease, color .28s ease, border-color .28s ease, box-shadow .28s ease, background .28s ease, fill .28s ease, stroke .28s ease;
-}
 
 @media (prefers-reduced-motion: reduce) {
-	.theme-transition, .theme-transition * { transition: none !important; }
 }
 
 html, body {
@@ -79,19 +75,6 @@ body {
 	padding: 0 8px;
 }
 
-.header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 16px;
-	margin-bottom: 20px;
-}
-
-.brand {
-	font-weight: 700;
-	letter-spacing: 0.2px;
-}
-
 /* Card */
 .card {
 	background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.0));
@@ -102,8 +85,6 @@ body {
 	box-shadow: var(--shadow);
 	position: relative;
 }
-
-.section + .section { margin-top: 20px; }
 
 /* Headings */
 h1, h2, h3 {
@@ -118,11 +99,6 @@ h2 { font-size: 22px; color: var(--muted); font-weight: 600; }
 
 p { margin: 0 0 12px 0; }
 
-.who-logged-in {
-	display: flex;
-	justify-content: center;
-}
-
 /* Links */
 a {
 	color: var(--primary);
@@ -132,8 +108,6 @@ a {
 }
 
 a:hover { color: var(--primary-700); }
-
-a.muted { color: var(--muted); font-weight: 500; }
 
 .link-row { display: flex; flex-wrap: wrap; gap: 12px 16px; }
 .link-row.centered { justify-content: center; }
@@ -262,8 +236,6 @@ button, input[type="submit"], input[type="button"] {
 .data dd { margin: 0 0 8px 0; }
 
 /* Utilities */
-.center { display: grid; place-items: center; }
-.mt-2 { margin-top: 8px; }
 .mt-3 { margin-top: 12px; }
 .mt-4 { margin-top: 16px; }
 .mt-6 { margin-top: 24px; }

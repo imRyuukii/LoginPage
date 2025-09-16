@@ -106,31 +106,37 @@ function getAllUsers() {
     return getUsersData();
 }
 
-function updateUser($userId, $name, $email, $role = null): bool
-{
-    $users = getUsersData();
-    foreach ($users as &$user) {
-        if ($user['id'] == $userId) {
-            $user['name'] = $name;
-            $user['email'] = $email;
-            if ($role !== null) {
-                $user['role'] = $role;
-            }
-            $user['updated_at'] = date('Y-m-d H:i:s');
-            break;
-        }
-    }
-    return saveUsersData($users);
-}
+// --Commented out by Inspection START (9/16/2025 8:51 PM):
+//function updateUser($userId, $name, $email, $role = null): bool
+//{
+//    $users = getUsersData();
+//    foreach ($users as &$user) {
+//        if ($user['id'] == $userId) {
+//            $user['name'] = $name;
+//            $user['email'] = $email;
+//            if ($role !== null) {
+//                $user['role'] = $role;
+//            }
+//            $user['updated_at'] = date('Y-m-d H:i:s');
+//            break;
+//        }
+//    }
+//    return saveUsersData($users);
+//}
+// --Commented out by Inspection STOP (9/16/2025 8:51 PM)
 
-function deleteUser($userId): bool
-{
-    $users = getUsersData();
-    $users = array_filter($users, function($user) use ($userId) {
-        return $user['id'] != $userId;
-    });
-    return saveUsersData(array_values($users));
-}
+
+// --Commented out by Inspection START (9/16/2025 8:51 PM):
+//function deleteUser($userId): bool
+//{
+//    $users = getUsersData();
+//    $users = array_filter($users, function($user) use ($userId) {
+//        return $user['id'] != $userId;
+//    });
+//    return saveUsersData(array_values($users));
+//}
+// --Commented out by Inspection STOP (9/16/2025 8:51 PM)
+
 
 // Function to update the last active timestamp
 function updateLastActive($userId): bool
@@ -188,4 +194,3 @@ function getLastActiveFormatted($lastActive, $lastActivity = null): string
         return 'Just now';
     }
 }
-

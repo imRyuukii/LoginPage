@@ -25,7 +25,7 @@ This guide outlines the migration from the current JSON-based user storage syste
 ### 🔄 What Needs Migration
 - **Data Storage**: JSON → MariaDB
 - **File Operations**: File I/O → Database queries
-- **Connection Management**: Add database connection layer
+- **Connection Management**: Add a database connection layer
 
 ---
 
@@ -354,7 +354,7 @@ src/
 
 3. **Migrate Existing Data**
    - Export current users from `users.json`
-   - Insert into database using the migration SQL
+   - Insert into a database using the migration SQL
 
 ### Phase 2: Code Migration
 1. **Create Database Config**
@@ -381,7 +381,7 @@ src/
 
 ### Phase 4: Cleanup
 1. **Backup JSON Files**
-   - Move `users.json` to backup location
+   - Move `users.json` to back-up location
 
 2. **Remove Old Code**
    - Keep `user-functions.php` as backup
@@ -508,7 +508,7 @@ $password = '';  // Empty for XAMPP default
 ### Pre-Migration
 - [ ] Backup current `users.json` file
 - [ ] Test current system functionality
-- [ ] Create database backup plan
+- [ ] Create a database backup plan
 
 ### Database Setup
 - [ ] Create `login_system` database
@@ -541,10 +541,10 @@ The migration from JSON to MariaDB will provide:
 - **Data Integrity**: ACID compliance and foreign key constraints
 - **Advanced Features**: Complex queries, reporting, and analytics
 
-The current system is already well-architected, making this migration straightforward and low-risk. All existing functionality will be preserved while gaining the benefits of a proper database backend.
+The current system is already well-architected, making this migration straightforward and low risk. All existing functionality will be preserved while gaining the benefits of a proper database backend.
 
 ---
 
-**Migration Guide Created:** January 27, 2025  
+**Migration Guide Created:** January 27, 2025,  
 **Current System Status:** Production-ready JSON system  
 **Target System:** MariaDB with enhanced features
