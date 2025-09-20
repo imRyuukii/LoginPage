@@ -1,11 +1,25 @@
 <?php
+// Harden session cookie and start session
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'domain' => '',
+        'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+}
 session_start();
-require_once '../models/user-functions.php';
+require_once '../models/user-functions-db.php';
+require_once '../security/csrf.php';
+csrf_ensure_initialized();
 
 $error = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    csrf_require_post();
     $username = isset($_POST['username']) ? trim($_POST['username']) : '';
     $password = isset($_POST['password']) ? trim($_POST['password']) : '';
     $confirmPassword = isset($_POST['confirm_password']) ? trim($_POST['confirm_password']) : '';
@@ -49,6 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <p class="alert success mt-3"><?php echo htmlspecialchars($success); ?></p>
             <?php endif; ?>
             <form method="post" action="">
+                <?php echo csrf_field(); ?>
                 <label for="username">Username</label>
                 <input type="text" id="username" name="username" required value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>">
 

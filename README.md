@@ -1,3 +1,30 @@
+## Update (2025-09-20)
+- Storage backend is now MySQL via PDO. Legacy JSON files (src/data) have been removed.
+- Database: login_system. Create the schema using scripts/db/schema.sql.
+- Configure credentials in src/config/database.php or via environment variables (DB_HOST, DB_NAME, DB_USER, DB_PASS).
+- CSRF protection added to login, register, delete-user, heartbeat, and logout (logout is POST-only now).
+- Admin can delete users (cannot delete self).
+- Online presence: heartbeat from Profile and Home updates last_activity; All Users panel live-updates every 30s; green dot shows "Online".
+
+### Quick start (local XAMPP)
+- Import schema: open phpMyAdmin → run scripts/db/schema.sql
+- Health check: http://localhost/mb/LoginPage/scripts/health.php
+- Login / Register: use the UI; to make an admin, set role='admin' for the user in DB
+
+### Useful endpoints
+- POST /src/public/api/heartbeat.php (session + CSRF required) → updates last_activity
+- GET  /src/public/api/users/last-activity.php (admin-only) → returns last_active/online for all users
+
+### Environment variables (optional)
+Set for the current shell before starting Apache/PHP:
+- PowerShell:
+  - $env:DB_HOST = '127.0.0.1'
+  - $env:DB_NAME = 'login_system'
+  - $env:DB_USER = 'root'
+  - $env:DB_PASS = ''
+
+These override src/config/database.php at runtime.
+
 # Login Page System—Professional Structure
 
 ## 📁 Project Structure

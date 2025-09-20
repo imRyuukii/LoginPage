@@ -1,3 +1,5 @@
+> Note (2025-09-20): The project has migrated to MySQL. This document remains as a reference and contains the canonical schema and approach. See scripts/db/schema.sql and src/config/database.php for current locations.
+
 # Database Implementation Guide
 
 **Current System:** JSON-based user storage  

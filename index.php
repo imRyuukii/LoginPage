@@ -1,6 +1,19 @@
 <?php
+// Harden session cookie and start session
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'domain' => '',
+        'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+}
 session_start();
-require_once './src/app/models/user-functions.php';
+require_once './src/app/models/user-functions-db.php';
+require_once './src/app/security/csrf.php';
+csrf_ensure_initialized();
 $isLoggedIn = isset($_SESSION['user']);
 ?>
 <!DOCTYPE html>
@@ -30,10 +43,13 @@ $isLoggedIn = isset($_SESSION['user']);
 			<h1 class="welcome-text">WELCOME</h1>
 			<?php if ($isLoggedIn): ?>
 				<p>Logged in as: <strong><?php echo htmlspecialchars($_SESSION['user']['login']); ?></strong></p>
-				<p class="link-row mt-3">
+				<div class="link-row mt-3">
 					<a class="button" href="./src/app/controllers/profile.php">Go to profile</a>
-					<a class="button" href="./src/app/controllers/logout.php">Logout</a>
-				</p>
+					<form method="post" action="./src/app/controllers/logout.php" style="display:inline;">
+						<?php echo csrf_field(); ?>
+						<button class="button" type="submit">Logout</button>
+					</form>
+				</div>
 			<?php else: ?>
 				<p>You are not logged in. Please log in to use our website.</p>
 				<p class="link-row mt-3">
@@ -46,6 +62,8 @@ $isLoggedIn = isset($_SESSION['user']);
 	<div class="demo-warning">*This is a demo version of the website</div>
     <script>
     (function() {
+        const CSRF_TOKEN = '<?php echo htmlspecialchars(csrf_token()); ?>';
+        const IS_LOGGED_IN = <?php echo $isLoggedIn ? 'true' : 'false'; ?>;
         const root = document.documentElement;
         const stored = localStorage.getItem('theme');
         const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
@@ -78,6 +96,26 @@ $isLoggedIn = isset($_SESSION['user']);
                 document.body.classList.remove('theme-transition');
             }, 320);
         });
+
+        // Heartbeat on home as well, so online status works anywhere when logged in
+        if (IS_LOGGED_IN) {
+            (function() {
+                let interval;
+                function send() {
+                    fetch('./src/public/api/heartbeat.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: 'csrf=' + encodeURIComponent(CSRF_TOKEN)
+                    }).catch(function(e){ /* silent */ });
+                }
+                function start(){ interval = setInterval(send, 30000); send(); }
+                function stop(){ if (interval) clearInterval(interval); }
+                document.addEventListener('visibilitychange', function(){
+                    if (!document.hidden) start(); else stop();
+                });
+                start();
+            })();
+        }
     })();
     </script>
 </body>

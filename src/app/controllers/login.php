@@ -1,10 +1,24 @@
 <?php
+// Harden session cookie and start session
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'domain' => '',
+        'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+}
 session_start();
-require_once '../models/user-functions.php';
+require_once '../models/user-functions-db.php';
+require_once '../security/csrf.php';
+csrf_ensure_initialized();
 
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+	csrf_require_post();
 	$login = isset($_POST['login']) ? trim($_POST['login']) : '';
 	$password = isset($_POST['password']) ? trim($_POST['password']) : '';
 
@@ -14,6 +28,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 		// Update last active timestamp
 		updateLastActive($user['id']);
 		
+		// Regenerate session ID on login to prevent fixation
+		session_regenerate_id(true);
 		$_SESSION['user'] = [
 			'id' => $user['id'],
 			'login' => $user['username'],
@@ -47,6 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 				<p class="alert error mt-3"><?php echo htmlspecialchars($error); ?></p>
 			<?php endif; ?>
 			<form method="post" action="">
+				<?php echo csrf_field(); ?>
 				<label for="login">Login</label>
 				<input type="text" id="login" name="login" required>
 

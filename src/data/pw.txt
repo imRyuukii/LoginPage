@@ -1,9 +1,0 @@
-ADMINS:
-    Admin:
-        LOGIN: admin
-        PASSWORD: admin123
-
-USERS:
-    Test:
-        LOGIN: test
-        PASSWORD: test123
