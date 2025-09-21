@@ -2,6 +2,9 @@
 // Enhanced EmailService with SMTP support for real emails
 // This version can send real emails via Gmail or other SMTP servers
 
+// Load Composer autoloader
+require_once __DIR__ . '/../../../vendor/autoload.php';
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;

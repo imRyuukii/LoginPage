@@ -39,9 +39,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     // Create verification token
                     $token = createEmailVerificationToken($newUser['id']);
-                    
-                    // Send verification email
-                    $emailService = new EmailService();
+
+                    // Use the SMTP version instead
+                    require_once '../services/EmailServiceSMTP.php';
+                    $emailService = new EmailServiceSMTP();
+
+                    // Configure real email sending
+                    // ⚠️ IMPORTANT: Replace these with your actual Gmail credentials!
+                    $emailService->enableRealEmails(
+                            'smtp.gmail.com',
+                            587,
+                            'zsplitt014@gmail.com',
+                            'jusb keps jlag xpis',
+                            ''
+                    );
+
                     $emailSent = $emailService->sendVerificationEmail($email, $name, $token);
                     
                     if ($emailSent) {

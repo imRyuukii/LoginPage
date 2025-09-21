@@ -41,11 +41,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 // Create new verification token
                 $token = createEmailVerificationToken($user['id']);
-                
-                // Send verification email
-                $emailService = new EmailService();
-                $emailSent = $emailService->sendVerificationEmail($email, $user['name'], $token);
-                
+
+                // Use the SMTP version instead
+                require_once '../services/EmailServiceSMTP.php';
+                $emailService = new EmailServiceSMTP();
+
+                // Configure real email sending
+                $emailService->enableRealEmails(
+                        'smtp.gmail.com',
+                        587,
+                        'YOUR_GMAIL@gmail.com',      // Your Gmail
+                        'YOUR_APP_PASSWORD_HERE',    // 16-char app password
+                        'noreply@yoursite.com'         // From email
+                );
+
+                $emailSent = $emailService->sendVerificationEmail($email, $name, $token);
+
                 if ($emailSent) {
                     $success = 'A new verification email has been sent to ' . htmlspecialchars($email) . '. Please check your email and click the verification link.';
                 } else {
