@@ -13,6 +13,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 session_start();
 require_once '../models/user-functions-db.php';
 require_once '../security/csrf.php';
+require_once '../services/EmailService.php';
 csrf_ensure_initialized();
 
 $error = '';
@@ -31,9 +32,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $result = registerUser($username, $password, $name, $email);
         if ($result['success']) {
-            $success = $result['message'];
-            // Redirect to log in after 2 seconds
-            header('refresh:2;url=./login.php');
+            // Get the newly created user to send verification email
+            $newUser = findUserByEmail($email);
+            
+            if ($newUser) {
+                try {
+                    // Create verification token
+                    $token = createEmailVerificationToken($newUser['id']);
+                    
+                    // Send verification email
+                    $emailService = new EmailService();
+                    $emailSent = $emailService->sendVerificationEmail($email, $name, $token);
+                    
+                    if ($emailSent) {
+                        $success = 'Registration successful! Please check your email (' . htmlspecialchars($email) . ') for a verification link to activate your account.';
+                    } else {
+                        $success = 'Registration successful, but we couldn\'t send the verification email. Please contact support.';
+                    }
+                } catch (Exception $e) {
+                    error_log('Email verification setup failed: ' . $e->getMessage());
+                    $success = 'Registration successful, but there was an issue with email verification. Please contact support.';
+                }
+            } else {
+                $success = 'Registration successful! Please contact support to verify your email.';
+            }
         } else {
             $error = $result['message'];
         }
@@ -84,6 +106,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <a class="button" href="./login.php">Back to Login</a>
                 </div>
             </form>
+            <div class="mt-6">
+                <div class="alert info" style="background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.25); color: var(--text);">
+                    <strong>📧 Email Verification Required</strong><br>
+                    After registration, you'll receive a verification email. You must click the verification link before you can log in.
+                </div>
+            </div>
             <p class="footer mt-6">Already have an account? <a href="./login.php">Login here</a></p>
         </div>
     </div>

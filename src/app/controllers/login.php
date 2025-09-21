@@ -25,21 +25,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	$user = loginUser($login, $password);
 	
 	if ($user) {
-		// Update last seen timestamps
-		updateLastActive($user['id']);
-		updateUserActivity($user['id']);
-		
-		// Regenerate session ID on login to prevent fixation
-		session_regenerate_id(true);
-		$_SESSION['user'] = [
-			'id' => $user['id'],
-			'login' => $user['username'],
-			'name' => $user['name'],
-			'email' => $user['email'],
-			'role' => $user['role'],
-		];
-		header('Location: ./profile.php');
-		exit;
+		// Check if email is verified
+		if (!$user['email_verified']) {
+			$error = 'Please verify your email address before logging in. Check your email for the verification link.';
+		} else {
+			// Update last seen timestamps
+			updateLastActive($user['id']);
+			updateUserActivity($user['id']);
+			
+			// Regenerate session ID on login to prevent fixation
+			session_regenerate_id(true);
+			$_SESSION['user'] = [
+				'id' => $user['id'],
+				'login' => $user['username'],
+				'name' => $user['name'],
+				'email' => $user['email'],
+				'role' => $user['role'],
+			];
+			header('Location: ./profile.php');
+			exit;
+		}
 	} else {
 		$error = 'Invalid login or password.';
 	}
@@ -77,7 +82,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 				</div>
 			</form>
 			<p class="footer mt-6">
-				Don't have an account? <a href="./register.php">Register here</a>
+				Don't have an account? <a href="./register.php">Register here</a><br>
+				Didn't receive verification email? <a href="./resend-verification.php">Resend verification</a>
 			</p>
 		</div>
 	</div>

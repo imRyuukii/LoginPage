@@ -115,6 +115,123 @@ function updateUserRole(int $userId, string $role): bool {
     }
 }
 
+// Email Verification Functions
+
+/**
+ * Create email verification token
+ */
+function createEmailVerificationToken(int $userId): string {
+    try {
+        global $db;
+        
+        // Generate secure random token
+        $token = bin2hex(random_bytes(32));
+        
+        // Set expiration to 24 hours from now
+        $expiresAt = date('Y-m-d H:i:s', strtotime('+24 hours'));
+        
+        // Remove any existing tokens for this user
+        $db->query('DELETE FROM email_verifications WHERE user_id = ?', [$userId]);
+        
+        // Insert new token
+        $db->query(
+            'INSERT INTO email_verifications (user_id, token, expires_at) VALUES (?, ?, ?)',
+            [$userId, $token, $expiresAt]
+        );
+        
+        return $token;
+    } catch (Exception $e) {
+        error_log('createEmailVerificationToken failed: ' . $e->getMessage());
+        throw new Exception('Failed to create verification token');
+    }
+}
+
+/**
+ * Verify email token and mark user as verified
+ */
+function verifyEmailToken(string $token): array {
+    try {
+        global $db;
+        
+        // Find valid token
+        $stmt = $db->query(
+            'SELECT ev.*, u.username, u.name, u.email FROM email_verifications ev ' .
+            'JOIN users u ON ev.user_id = u.id ' .
+            'WHERE ev.token = ? AND ev.expires_at > NOW()',
+            [$token]
+        );
+        $verification = $stmt->fetch();
+        
+        if (!$verification) {
+            return ['success' => false, 'message' => 'Invalid or expired verification token'];
+        }
+        
+        // Mark user as verified
+        $db->query('UPDATE users SET email_verified = TRUE WHERE id = ?', [$verification['user_id']]);
+        
+        // Remove the used token
+        $db->query('DELETE FROM email_verifications WHERE token = ?', [$token]);
+        
+        return [
+            'success' => true,
+            'message' => 'Email verified successfully! You can now log in.',
+            'user' => [
+                'id' => $verification['user_id'],
+                'username' => $verification['username'],
+                'name' => $verification['name'],
+                'email' => $verification['email']
+            ]
+        ];
+    } catch (Exception $e) {
+        error_log('verifyEmailToken failed: ' . $e->getMessage());
+        return ['success' => false, 'message' => 'Failed to verify email'];
+    }
+}
+
+/**
+ * Check if user's email is verified
+ */
+function isEmailVerified(int $userId): bool {
+    try {
+        global $db;
+        $stmt = $db->query('SELECT email_verified FROM users WHERE id = ?', [$userId]);
+        $user = $stmt->fetch();
+        return $user && $user['email_verified'];
+    } catch (Exception $e) {
+        error_log('isEmailVerified failed: ' . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Get user by ID for verification purposes
+ */
+function getUserById(int $userId): ?array {
+    try {
+        global $db;
+        $stmt = $db->query('SELECT * FROM users WHERE id = ?', [$userId]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    } catch (Exception $e) {
+        error_log('getUserById failed: ' . $e->getMessage());
+        return null;
+    }
+}
+
+/**
+ * Clean up expired verification tokens
+ */
+function cleanupExpiredTokens(): int {
+    try {
+        global $db;
+        $stmt = $db->query('DELETE FROM email_verifications WHERE expires_at < NOW()');
+        return $stmt->rowCount();
+    } catch (Exception $e) {
+        error_log('cleanupExpiredTokens failed: ' . $e->getMessage());
+        return 0;
+    }
+}
+
 // Presentation helper chooses the most recent of last_activity and last_active
 function getLastActiveFormatted($lastActive, $lastActivity = null): string {
     // Prefer the newer of the two timestamps if both exist
