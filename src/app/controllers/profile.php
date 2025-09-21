@@ -31,6 +31,7 @@ $users = getAllUsers();
 	<title>User Profile</title>
 	<link rel="icon" type="image/png" href="../../public/images/logo.png">
 	<link rel="stylesheet" href="../../public/css/style.css">
+	<script src="../../public/js/heartbeat.js" defer></script>
 </head>
 <body>
 	<button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"></button>
@@ -75,6 +76,12 @@ $users = getAllUsers();
                 <?php if (!empty($_GET['msg']) && $_GET['msg'] === 'deleted'): ?>
                     <p class="alert success mt-3">User deleted.</p>
                 <?php endif; ?>
+                <?php if (!empty($_GET['msg']) && $_GET['msg'] === 'promoted'): ?>
+                    <p class="alert success mt-3">User promoted to admin.</p>
+                <?php endif; ?>
+                <?php if (!empty($_GET['msg']) && $_GET['msg'] === 'demoted'): ?>
+                    <p class="alert success mt-3">User demoted to user.</p>
+                <?php endif; ?>
                 <?php if (!empty($_GET['error'])): ?>
                     <p class="alert error mt-3"><?php echo htmlspecialchars($_GET['error']); ?></p>
                 <?php endif; ?>
@@ -107,7 +114,20 @@ $users = getAllUsers();
 							</div>
                             <div class="user-actions">
                                 <?php if (($userData['id'] ?? null) !== ($user['id'] ?? null)): ?>
-                                    <form method="post" action="./delete-user.php" onsubmit="return confirm('Delete this user?');">
+                                    <?php if (($userData['role'] ?? 'user') !== 'admin'): ?>
+                                    <form method="post" action="./make-admin.php" onsubmit="return confirm('Promote this user to admin?');" style="display:inline; margin-right: 8px;">
+                                        <?php echo csrf_field(); ?>
+                                        <input type="hidden" name="user_id" value="<?php echo (int)($userData['id'] ?? 0); ?>">
+                                        <button class="button" type="submit">Make Admin</button>
+                                    </form>
+                                    <?php else: ?>
+                                    <form method="post" action="./make-user.php" onsubmit="return confirm('Demote this admin to user?');" style="display:inline; margin-right: 8px;">
+                                        <?php echo csrf_field(); ?>
+                                        <input type="hidden" name="user_id" value="<?php echo (int)($userData['id'] ?? 0); ?>">
+                                        <button class="button" type="submit">Make User</button>
+                                    </form>
+                                    <?php endif; ?>
+                                    <form method="post" action="./delete-user.php" onsubmit="return confirm('Delete this user?');" style="display:inline;">
                                         <?php echo csrf_field(); ?>
                                         <input type="hidden" name="user_id" value="<?php echo (int)($userData['id'] ?? 0); ?>">
                                         <button class="button" type="submit">Delete</button>
@@ -124,6 +144,11 @@ $users = getAllUsers();
     <script>
     (function() {
         const CSRF_TOKEN = '<?php echo htmlspecialchars(csrf_token()); ?>';
+        window.addEventListener('DOMContentLoaded', function(){
+            if (window.Heartbeat) {
+                window.Heartbeat.installHeartbeatOnLoad({ url: '../../public/api/heartbeat.php', csrf: CSRF_TOKEN });
+            }
+        });
         const root = document.documentElement;
         const stored = localStorage.getItem('theme');
         const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
@@ -179,9 +204,16 @@ $users = getAllUsers();
         // Send heartbeat every 30 seconds
         function startHeartbeat() {
             if (heartbeatInterval) clearInterval(heartbeatInterval);
-            heartbeatInterval = setInterval(sendHeartbeat, 30000);
+            // After every heartbeat, trigger a live refresh so "Online" stays fresh even without navigation
+            heartbeatInterval = setInterval(function(){
+                sendHeartbeat().then(function(){
+                    if (window.__refreshLastActive) { window.__refreshLastActive(); }
+                });
+            }, 30000);
             // Send initial heartbeat and immediately refresh the user list when it succeeds
             sendHeartbeat().then(function(){
+                // Flag in case the live-update script hasn't loaded yet
+                window.__deferLastActiveRefresh = true;
                 if (window.__refreshLastActive) { window.__refreshLastActive(); }
             });
         }
@@ -225,6 +257,8 @@ $users = getAllUsers();
         }
         // Expose a one-shot refresh so heartbeat can trigger an immediate UI update after login
         window.__refreshLastActive = tick;
+        // If heartbeat already requested a refresh before this script loaded, run it now
+        if (window.__deferLastActiveRefresh) { tick(); window.__deferLastActiveRefresh = false; }
         tick();
         setInterval(tick, 10000); // 10s for snappier updates
     })();

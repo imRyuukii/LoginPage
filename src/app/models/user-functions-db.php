@@ -100,9 +100,29 @@ function deleteUser(int $userId): bool {
     }
 }
 
-// Presentation helper remains identical
+function updateUserRole(int $userId, string $role): bool {
+    $role = strtolower($role);
+    if (!in_array($role, ['admin', 'user'], true)) {
+        return false;
+    }
+    try {
+        global $db;
+        $stmt = $db->query('UPDATE users SET role = ? WHERE id = ?', [$role, $userId]);
+        return $stmt->rowCount() > 0;
+    } catch (Exception $e) {
+        error_log('updateUserRole failed: ' . $e->getMessage());
+        return false;
+    }
+}
+
+// Presentation helper chooses the most recent of last_activity and last_active
 function getLastActiveFormatted($lastActive, $lastActivity = null): string {
-    $timeToCheck = $lastActivity ?: $lastActive;
+    // Prefer the newer of the two timestamps if both exist
+    if ($lastActivity && $lastActive) {
+        $timeToCheck = (strtotime($lastActivity) >= strtotime($lastActive)) ? $lastActivity : $lastActive;
+    } else {
+        $timeToCheck = $lastActivity ?: $lastActive;
+    }
     if (!$timeToCheck) return 'Never';
 
     $lastActiveTime = new DateTime($timeToCheck);

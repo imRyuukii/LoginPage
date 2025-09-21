@@ -24,6 +24,7 @@ $isLoggedIn = isset($_SESSION['user']);
 	<title>Login Page</title>
 	<link rel="icon" type="image/png" href="./src/public/images/logo.png">
 	<link rel="stylesheet" href="./src/public/css/style.css">
+	<script src="./src/public/js/heartbeat.js" defer></script>
 </head>
 <body>
 	<button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"></button>
@@ -64,6 +65,11 @@ $isLoggedIn = isset($_SESSION['user']);
     (function() {
         const CSRF_TOKEN = '<?php echo htmlspecialchars(csrf_token()); ?>';
         const IS_LOGGED_IN = <?php echo $isLoggedIn ? 'true' : 'false'; ?>;
+        window.addEventListener('DOMContentLoaded', function(){
+            if (IS_LOGGED_IN && window.Heartbeat) {
+                window.Heartbeat.installHeartbeatOnLoad({ url: './src/public/api/heartbeat.php', csrf: CSRF_TOKEN });
+            }
+        });
         const root = document.documentElement;
         const stored = localStorage.getItem('theme');
         const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;

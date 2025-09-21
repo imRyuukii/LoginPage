@@ -16,6 +16,7 @@ require_once '../../app/security/csrf.php';
 csrf_ensure_initialized();
 
 header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store, no-cache, must-revalidate');
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

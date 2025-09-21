@@ -51,7 +51,14 @@ foreach ($users as $usr) {
         'last_activity' => $usr['last_activity'] ?? null,
 'last_active_text' => $label,
         'online' => (function() use ($usr) {
-            $time = $usr['last_activity'] ?? $usr['last_active'] ?? null;
+            $la = $usr['last_active'] ?? null;
+            $lact = $usr['last_activity'] ?? null;
+            $time = null;
+            if ($la && $lact) {
+                $time = (strtotime($lact) >= strtotime($la)) ? $lact : $la;
+            } else {
+                $time = $lact ?: $la;
+            }
             if (!$time) return false;
             try { $last = new DateTime($time); $now = new DateTime(); } catch (Throwable $e) { return false; }
             $diff = $now->getTimestamp() - $last->getTimestamp();

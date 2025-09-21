@@ -25,8 +25,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 	$user = loginUser($login, $password);
 	
 	if ($user) {
-		// Update last active timestamp
+		// Update last seen timestamps
 		updateLastActive($user['id']);
+		updateUserActivity($user['id']);
 		
 		// Regenerate session ID on login to prevent fixation
 		session_regenerate_id(true);
