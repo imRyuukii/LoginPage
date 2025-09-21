@@ -21,7 +21,18 @@ if (!isset($_SESSION['user'])) {
 }
 
 $user = $_SESSION['user'];
-$users = getAllUsers();
+
+// Optional admin search/filter inputs via GET
+$searchQ = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
+$filterRole = isset($_GET['role']) ? trim((string)$_GET['role']) : '';
+
+if ($filterRole === 'all') { $filterRole = ''; }
+
+if ($searchQ !== '' || ($filterRole !== '' && in_array($filterRole, ['admin', 'user'], true))) {
+    $users = getUsersFiltered($searchQ, $filterRole);
+} else {
+    $users = getAllUsers();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -67,12 +78,57 @@ $users = getAllUsers();
 	
 	<?php 
 	// Check if the user is admin (fallback to login for backward compatibility)
-	$isAdmin = ($user['role'] ?? ($user['login'] === 'admin' ? 'admin' : 'user')) === 'admin';
-	if ($isAdmin): 
-	?>
-	<div class="container page card-closer">
+$isAdmin = ($user['role'] ?? ($user['login'] === 'admin' ? 'admin' : 'user')) === 'admin';
+if ($isAdmin): 
+?>
+<div class="container page card-closer">
 		<div class="card">
 			<h2>All Users</h2>
+                <?php 
+                    // Pagination setup
+                    $perPage = 10;
+                    $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+                    $total = countUsersFiltered($searchQ !== '' ? $searchQ : null, $filterRole !== '' ? $filterRole : null);
+                    $totalPages = max(1, (int)ceil($total / $perPage));
+                    if ($page > $totalPages) { $page = $totalPages; }
+                    $offset = ($page - 1) * $perPage;
+
+                    // Fetch current page
+                    $users = getUsersFilteredPaginated($searchQ !== '' ? $searchQ : null, $filterRole !== '' ? $filterRole : null, $perPage, $offset);
+
+                    // Helper for query strings
+                    function qp(array $extra = []) {
+                        $base = [
+                            'q' => isset($_GET['q']) ? (string)$_GET['q'] : '',
+                            'role' => isset($_GET['role']) ? (string)$_GET['role'] : 'all',
+                        ];
+                        $q = array_merge($base, $extra);
+                        // Clean defaults
+                        if ($q['role'] === '' || $q['role'] === 'all') unset($q['role']);
+                        if ($q['q'] === '') unset($q['q']);
+                        return http_build_query($q);
+                    }
+                ?>
+                <form method="get" action="profile.php" class="mt-3" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                    <input type="hidden" name="page" value="1" />
+                    <input type="search" name="q" placeholder="Search name, username, email" value="<?php echo htmlspecialchars($searchQ); ?>" style="flex:1; min-width:220px;" />
+                    <select name="role" aria-label="Filter by role">
+                        <?php $roleOptions = ['all' => 'All roles', 'admin' => 'Admins', 'user' => 'Users'];
+                        $currentRole = ($filterRole === '' ? 'all' : $filterRole);
+                        foreach ($roleOptions as $val => $label): ?>
+                            <option value="<?php echo $val; ?>" <?php echo $currentRole === $val ? 'selected' : ''; ?>><?php echo $label; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <button class="button" type="submit">Apply</button>
+                    <a class="button" href="profile.php">Reset</a>
+                </form>
+                <div class="mt-2" style="font-size: 0.95em; color: var(--muted-text);">
+                    <?php 
+                        $showingStart = $total ? ($offset + 1) : 0; 
+                        $showingEnd = min($offset + $perPage, $total);
+                        echo 'Showing ' . $showingStart . '–' . $showingEnd . ' of ' . $total;
+                    ?>
+                </div>
                 <?php if (!empty($_GET['msg']) && $_GET['msg'] === 'deleted'): ?>
                     <p class="alert success mt-3">User deleted.</p>
                 <?php endif; ?>
@@ -84,6 +140,9 @@ $users = getAllUsers();
                 <?php endif; ?>
                 <?php if (!empty($_GET['error'])): ?>
                     <p class="alert error mt-3"><?php echo htmlspecialchars($_GET['error']); ?></p>
+                <?php endif; ?>
+                <?php if (empty($users)): ?>
+                    <p class="mt-3">No users found for the current filter.</p>
                 <?php endif; ?>
 				<div class="users-list">
 					<?php foreach ($users as $userData): ?>
@@ -136,7 +195,27 @@ $users = getAllUsers();
 			</div>
 			</div> <!-- .user-item -->
 			<?php endforeach; ?>
-			</div> <!-- .users-list -->
+</div> <!-- .users-list -->
+                <?php if ($totalPages > 1): ?>
+                <nav class="mt-3" aria-label="Pagination" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                    <?php 
+                        $prev = max(1, $page - 1);
+                        $next = min($totalPages, $page + 1);
+                    ?>
+                    <a class="button" href="profile.php?<?php echo qp(['page' => 1]); ?>" aria-label="First page">« First</a>
+                    <a class="button" href="profile.php?<?php echo qp(['page' => $prev]); ?>" aria-label="Previous page">‹ Prev</a>
+                    <?php 
+                        // Windowed page numbers
+                        $start = max(1, $page - 2);
+                        $end = min($totalPages, $page + 2);
+                        for ($i = $start; $i <= $end; $i++):
+                    ?>
+                        <a class="button<?php echo $i === $page ? ' active' : ''; ?>" href="profile.php?<?php echo qp(['page' => $i]); ?>"><?php echo $i; ?></a>
+                    <?php endfor; ?>
+                    <a class="button" href="profile.php?<?php echo qp(['page' => $next]); ?>" aria-label="Next page">Next ›</a>
+                    <a class="button" href="profile.php?<?php echo qp(['page' => $totalPages]); ?>" aria-label="Last page">Last »</a>
+                </nav>
+                <?php endif; ?>
 		</div> <!-- .card -->
 	</div> <!-- .container -->
 	<?php endif; ?>
@@ -236,7 +315,13 @@ $users = getAllUsers();
     (function() {
         const IS_ADMIN = <?php echo $isAdmin ? 'true' : 'false'; ?>;
         if (!IS_ADMIN) return;
-        const ENDPOINT = '../../public/api/users/last-activity.php';
+const ENDPOINT = '../../public/api/users/last-activity.php';
+        function visibleIds() {
+            return Array.from(document.querySelectorAll('.user-item[data-user-id]'))
+                .map(function(el){ return el.getAttribute('data-user-id'); })
+                .filter(function(v){ return v && /^\d+$/.test(v); })
+                .join(',');
+        }
         function apply(data) {
             if (!Array.isArray(data)) return;
             data.forEach(function(u){
@@ -249,7 +334,7 @@ $users = getAllUsers();
             });
         }
         function tick(){
-            const url = ENDPOINT + '?t=' + Date.now();
+const url = ENDPOINT + '?t=' + Date.now() + '&ids=' + encodeURIComponent(visibleIds());
             fetch(url, { headers: { 'Accept': 'application/json', 'Cache-Control': 'no-cache' }, cache: 'no-store' })
                 .then(function(r){ return r.ok ? r.json() : Promise.reject(); })
                 .then(apply)

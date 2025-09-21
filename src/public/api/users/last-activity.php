@@ -36,7 +36,14 @@ if ($role !== 'admin') {
     exit;
 }
 
-$users = getAllUsers();
+// If client passes a comma-separated list of ids, restrict to those
+$idsParam = isset($_GET['ids']) ? trim((string)$_GET['ids']) : '';
+if ($idsParam !== '') {
+    $ids = array_filter(array_map('intval', explode(',', $idsParam)), function($v){ return $v > 0; });
+    $users = getUsersByIds($ids);
+} else {
+    $users = getAllUsers();
+}
 $out = [];
 foreach ($users as $usr) {
     try {

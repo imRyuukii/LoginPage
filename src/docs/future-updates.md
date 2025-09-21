@@ -56,8 +56,32 @@ Your website is already quite impressive with:
 - Email notifications for admin actions
 
 #### User Roles & Permissions
-- Add more roles (moderator, editor, etc.)
-- Granular permissions system
+- Add more roles (moderator, editor, etc.) :
+    1. Add More Roles (moderator, editor, etc.)
+    What it does: Instead of just "admin" and "user", create multiple role levels:
+    •  Super Admin - full system access, can manage other admins
+    •  Admin - user management, system settings
+    •  Moderator - can manage users but not system settings
+    •  Editor - can edit content but not manage users
+    •  Premium User - regular user with extra features
+    •  Basic User - standard limited access
+    •  Guest - temporary/limited access
+
+    Example: A moderator can ban problematic users and delete inappropriate content, 
+    but can't access server settings or billing information.
+- Granular permissions system : 
+    What it does: Fine-tune exactly what each role can do:
+    •  Permission categories:
+        ◦  User management (create, edit, delete users)
+        ◦  Content management (create, edit, delete posts/content)
+        ◦  System settings (database, security settings)
+        ◦  Financial access (billing, payments)
+        ◦  Analytics access (view reports, export data)
+    •  Individual permissions that can be mixed and matched
+    •  Custom role creation - build roles with specific permission combinations
+
+    Example: Create a "Customer Support" role that can view user profiles 
+    and reset passwords, but can't delete users or access financial data.
 - Role-based feature access
 
 ### 4. **Communication Features**

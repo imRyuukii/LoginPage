@@ -48,25 +48,34 @@ html, body {
 	height: 100%;
 }
 
+/* Solid background to avoid any bottom seam in all themes */
+html {
+	min-height: 100%;
+	background-color: var(--bg);
+}
+
+html[data-theme="light"] {
+	background-color: var(--bg);
+}
+
 /* Layout */
 body {
 	margin: 0;
-	background: radial-gradient(1200px 800px at -10% -10%, var(--panel-2), transparent 60%),
-		radial-gradient(1000px 800px at 110% -10%, var(--panel-2), transparent 60%),
-		linear-gradient(180deg, var(--bg), #0b1020 55%, #0a0f1c 100%);
+    min-height: 100vh; /* ensure full viewport height */
+	background-color: var(--bg);
 	color: var(--text);
 	font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
 	line-height: 1.6;
 	display: grid;
 	place-items: start center;
 	padding: 48px 16px;
+	/* Ensure a bit more scrollable space at the bottom to avoid visual cutoff/overlap with fixed elements */
+	padding-bottom: calc(48px + 30px);
 }
 
 /* Light-specific page background */
 [data-theme="light"] body {
-	background: radial-gradient(1200px 800px at -10% -10%, var(--panel-2), transparent 60%),
-		radial-gradient(1000px 800px at 110% -10%, var(--panel-2), transparent 60%),
-		linear-gradient(180deg, var(--bg), #ffffff 55%, #f8fafc 100%);
+	background-color: var(--bg);
 }
 
 .container {
@@ -81,9 +90,10 @@ body {
 	backdrop-filter: blur(6px);
 	border: 1px solid var(--border);
 	border-radius: 14px;
-	padding: 22px;
+	padding: 32px;
 	box-shadow: var(--shadow);
 	position: relative;
+	margin-bottom: 24px;
 }
 
 /* Headings */
@@ -472,7 +482,7 @@ button, input[type="submit"], input[type="button"] {
 
 /* Medium screens */
 @media (max-width: 768px) {
-	body { padding: 24px 12px; }
+	body { padding: 24px 12px; padding-bottom: calc(24px + 30px); }
 	.container { max-width: 100%; padding: 0 8px; }
 	.card { padding: 18px; }
 	
@@ -535,7 +545,7 @@ button, input[type="submit"], input[type="button"] {
 
 /* Small screens */
 @media (max-width: 520px) {
-	body { padding: 16px 8px; }
+	body { padding: 16px 8px; padding-bottom: calc(16px + 30px); }
 	.container { padding: 0; }
 	.card { padding: 16px; border-radius: 12px; }
 	
@@ -661,7 +671,7 @@ button, input[type="submit"], input[type="button"] {
 
 /* Extra small screens */
 @media (max-width: 360px) {
-	body { padding: 12px 4px; }
+	body { padding: 12px 4px; padding-bottom: calc(12px + 30px); }
 	.card { padding: 12px; }
 	
 	.logo-website-top-left {

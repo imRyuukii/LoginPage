@@ -73,6 +73,112 @@ function getAllUsers(): array {
     return getUsersData();
 }
 
+/**
+ * Fetch users with optional search and role filtering.
+ * - Admins first, then users
+ * - Within each role, order by created_at ASC (oldest first), then id ASC
+ */
+function getUsersFiltered(?string $q = null, ?string $role = null): array {
+    global $db;
+    $where = [];
+    $params = [];
+
+    // Role filter: only allow 'admin' or 'user'
+    if ($role !== null && $role !== '' && in_array(strtolower($role), ['admin', 'user'], true)) {
+        $where[] = 'role = ?';
+        $params[] = strtolower($role);
+    }
+
+    // Text search over username, name, email
+    if ($q !== null && $q !== '') {
+        $like = '%' . $q . '%';
+        $where[] = '(username LIKE ? OR name LIKE ? OR email LIKE ?)';
+        array_push($params, $like, $like, $like);
+    }
+
+    $sql = 'SELECT * FROM users';
+    if (!empty($where)) {
+        $sql .= ' WHERE ' . implode(' AND ', $where);
+    }
+    $sql .= " ORDER BY CASE WHEN role = 'admin' THEN 0 ELSE 1 END ASC, created_at ASC, id ASC";
+
+    $stmt = $db->query($sql, $params);
+    return $stmt->fetchAll();
+}
+
+/**
+ * Count users for pagination with same filters as getUsersFiltered
+ */
+function countUsersFiltered(?string $q = null, ?string $role = null): int {
+    global $db;
+    $where = [];
+    $params = [];
+
+    if ($role !== null && $role !== '' && in_array(strtolower($role), ['admin', 'user'], true)) {
+        $where[] = 'role = ?';
+        $params[] = strtolower($role);
+    }
+    if ($q !== null && $q !== '') {
+        $like = '%' . $q . '%';
+        $where[] = '(username LIKE ? OR name LIKE ? OR email LIKE ?)';
+        array_push($params, $like, $like, $like);
+    }
+
+    $sql = 'SELECT COUNT(*) AS c FROM users';
+    if (!empty($where)) {
+        $sql .= ' WHERE ' . implode(' AND ', $where);
+    }
+    $stmt = $db->query($sql, $params);
+    $row = $stmt->fetch();
+    return (int)($row['c'] ?? 0);
+}
+
+/**
+ * Paginated fetch with filters. LIMIT/OFFSET are sanitized integers.
+ */
+function getUsersFilteredPaginated(?string $q, ?string $role, int $limit, int $offset): array {
+    global $db;
+    $limit = max(1, (int)$limit);
+    $offset = max(0, (int)$offset);
+
+    $where = [];
+    $params = [];
+
+    if ($role !== null && $role !== '' && in_array(strtolower($role), ['admin', 'user'], true)) {
+        $where[] = 'role = ?';
+        $params[] = strtolower($role);
+    }
+    if ($q !== null && $q !== '') {
+        $like = '%' . $q . '%';
+        $where[] = '(username LIKE ? OR name LIKE ? OR email LIKE ?)';
+        array_push($params, $like, $like, $like);
+    }
+
+    $sql = 'SELECT * FROM users';
+    if (!empty($where)) {
+        $sql .= ' WHERE ' . implode(' AND ', $where);
+    }
+    $sql .= " ORDER BY CASE WHEN role = 'admin' THEN 0 ELSE 1 END ASC, created_at ASC, id ASC";
+    // Note: PDO with MySQL does not support binding LIMIT/OFFSET without emulation
+    $sql .= " LIMIT $limit OFFSET $offset";
+
+    $stmt = $db->query($sql, $params);
+    return $stmt->fetchAll();
+}
+
+/**
+ * Fetch specific users by IDs, preserving role-priority and created_at ordering.
+ */
+function getUsersByIds(array $ids): array {
+    global $db;
+    $ids = array_values(array_unique(array_map('intval', $ids)));
+    if (empty($ids)) return [];
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $sql = "SELECT * FROM users WHERE id IN ($placeholders) ORDER BY CASE WHEN role = 'admin' THEN 0 ELSE 1 END ASC, created_at ASC, id ASC";
+    $stmt = $db->query($sql, $ids);
+    return $stmt->fetchAll();
+}
+
 function updateLastActive(int $userId): bool {
     try {
         global $db;
