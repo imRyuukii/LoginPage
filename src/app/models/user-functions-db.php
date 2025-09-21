@@ -232,6 +232,148 @@ function cleanupExpiredTokens(): int {
     }
 }
 
+// Password Reset Functions
+
+/**
+ * Create password reset token for user
+ */
+function createPasswordResetToken(string $email): array {
+    try {
+        global $db;
+        
+        // Find user by email
+        $user = findUserByEmail($email);
+        if (!$user) {
+            return ['success' => false, 'message' => 'No account found with that email address'];
+        }
+        
+        // Check if user's email is verified
+        if (!$user['email_verified']) {
+            return ['success' => false, 'message' => 'Please verify your email address first before resetting password'];
+        }
+        
+        // Generate secure random token
+        $token = bin2hex(random_bytes(32));
+        
+        // Set expiration to 1 hour from now
+        $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
+        
+        // Remove any existing tokens for this user
+        $db->query('DELETE FROM password_resets WHERE user_id = ?', [$user['id']]);
+        
+        // Insert new token
+        $db->query(
+            'INSERT INTO password_resets (user_id, email, token, expires_at) VALUES (?, ?, ?, ?)',
+            [$user['id'], $email, $token, $expiresAt]
+        );
+        
+        return [
+            'success' => true,
+            'token' => $token,
+            'user' => $user
+        ];
+    } catch (Exception $e) {
+        error_log('createPasswordResetToken failed: ' . $e->getMessage());
+        return ['success' => false, 'message' => 'Failed to create password reset token'];
+    }
+}
+
+/**
+ * Validate password reset token and get associated user
+ */
+function validatePasswordResetToken(string $token): array {
+    try {
+        global $db;
+        
+        // Find valid token
+        $stmt = $db->query(
+            'SELECT pr.*, u.username, u.name, u.email FROM password_resets pr ' .
+            'JOIN users u ON pr.user_id = u.id ' .
+            'WHERE pr.token = ? AND pr.expires_at > NOW() AND pr.used_at IS NULL',
+            [$token]
+        );
+        $reset = $stmt->fetch();
+        
+        if (!$reset) {
+            return ['success' => false, 'message' => 'Invalid or expired password reset token'];
+        }
+        
+        return [
+            'success' => true,
+            'user' => [
+                'id' => $reset['user_id'],
+                'username' => $reset['username'],
+                'name' => $reset['name'],
+                'email' => $reset['email']
+            ],
+            'token_data' => $reset
+        ];
+    } catch (Exception $e) {
+        error_log('validatePasswordResetToken failed: ' . $e->getMessage());
+        return ['success' => false, 'message' => 'Failed to validate password reset token'];
+    }
+}
+
+/**
+ * Reset user password using valid token
+ */
+function resetUserPassword(string $token, string $newPassword): array {
+    try {
+        global $db;
+        
+        // Validate token first
+        $tokenValidation = validatePasswordResetToken($token);
+        if (!$tokenValidation['success']) {
+            return $tokenValidation;
+        }
+        
+        $user = $tokenValidation['user'];
+        
+        // Validate password strength
+        if (strlen($newPassword) < 6) {
+            return ['success' => false, 'message' => 'Password must be at least 6 characters long'];
+        }
+        
+        // Hash new password
+        $passwordHash = password_hash($newPassword, PASSWORD_DEFAULT);
+        
+        // Update user password
+        $db->query(
+            'UPDATE users SET password_hash = ?, password_reset_at = NOW() WHERE id = ?',
+            [$passwordHash, $user['id']]
+        );
+        
+        // Mark token as used
+        $db->query(
+            'UPDATE password_resets SET used_at = NOW() WHERE token = ?',
+            [$token]
+        );
+        
+        return [
+            'success' => true,
+            'message' => 'Password reset successful! You can now log in with your new password.',
+            'user' => $user
+        ];
+    } catch (Exception $e) {
+        error_log('resetUserPassword failed: ' . $e->getMessage());
+        return ['success' => false, 'message' => 'Failed to reset password'];
+    }
+}
+
+/**
+ * Clean up expired password reset tokens
+ */
+function cleanupExpiredPasswordResetTokens(): int {
+    try {
+        global $db;
+        $stmt = $db->query('DELETE FROM password_resets WHERE expires_at < NOW() OR used_at IS NOT NULL');
+        return $stmt->rowCount();
+    } catch (Exception $e) {
+        error_log('cleanupExpiredPasswordResetTokens failed: ' . $e->getMessage());
+        return 0;
+    }
+}
+
 // Presentation helper chooses the most recent of last_activity and last_active
 function getLastActiveFormatted($lastActive, $lastActivity = null): string {
     // Prefer the newer of the two timestamps if both exist

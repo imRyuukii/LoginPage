@@ -52,6 +52,25 @@ class EmailServiceSMTP {
     }
     
     /**
+     * Send password reset email
+     */
+    public function sendPasswordResetEmail($userEmail, $userName, $resetToken) {
+        $subject = 'Reset Your Password - LoginPage';
+        $resetUrl = 'http://localhost/mb/LoginPage/src/app/controllers/reset-password.php?token=' . urlencode($resetToken);
+        
+        // Load email template
+        $htmlBody = $this->getPasswordResetEmailTemplate($userName, $resetUrl);
+        $textBody = $this->getPasswordResetEmailText($userName, $resetUrl);
+        
+        if ($this->smtpEnabled) {
+            return $this->sendEmailSMTP($userEmail, $subject, $htmlBody, $textBody);
+        } else {
+            // Fallback to regular mail() function (for MailHog/local testing)
+            return $this->sendEmailLocal($userEmail, $subject, $htmlBody, $textBody);
+        }
+    }
+    
+    /**
      * Send email using PHPMailer SMTP (for real emails)
      */
     private function sendEmailSMTP($to, $subject, $htmlBody, $textBody = null) {
@@ -212,6 +231,81 @@ Important:
 - This verification link will expire in 24 hours
 - You cannot log in until your email is verified
 - If you didn't create this account, please ignore this email
+
+This is an automated email from LoginPage System. Please do not reply to this email.";
+    }
+    
+    /**
+     * Get HTML password reset email template
+     */
+    private function getPasswordResetEmailTemplate($userName, $resetUrl) {
+        return '
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Reset</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; padding: 30px 20px; text-align: center; }
+        .content { padding: 30px 20px; }
+        .button { display: inline-block; background: #dc2626; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; margin: 20px 0; font-weight: bold; }
+        .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #6c757d; font-size: 14px; }
+        .code { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 8px 12px; font-family: monospace; margin: 10px 0; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 12px; margin: 15px 0; color: #856404; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Password Reset Request</h1>
+        </div>
+        <div class="content">
+            <h2>Hello, ' . htmlspecialchars($userName) . '!</h2>
+            <p>We received a request to reset the password for your LoginPage account.</p>
+            <p><strong>Click the button below to reset your password:</strong></p>
+            <p style="text-align: center;">
+                <a href="' . htmlspecialchars($resetUrl) . '" class="button">Reset My Password</a>
+            </p>
+            <p>If the button doesn\'t work, you can copy and paste this link into your browser:</p>
+            <div class="code">' . htmlspecialchars($resetUrl) . '</div>
+            <div class="warning">
+                <p><strong>⚠️ Important Security Information:</strong></p>
+                <ul>
+                    <li>This password reset link will expire in <strong>1 hour</strong></li>
+                    <li>If you didn\'t request this password reset, please ignore this email</li>
+                    <li>Your password will not be changed unless you click the link above</li>
+                    <li>For security, this link can only be used once</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer">
+            <p>This is an automated email from LoginPage System. Please do not reply to this email.</p>
+            <p>If you need help, please contact support.</p>
+        </div>
+    </div>
+</body>
+</html>';
+    }
+    
+    /**
+     * Get plain text password reset email
+     */
+    private function getPasswordResetEmailText($userName, $resetUrl) {
+        return "Hello, $userName!
+
+We received a request to reset the password for your LoginPage account.
+
+Please visit the following link to reset your password:
+$resetUrl
+
+IMPORTANT SECURITY INFORMATION:
+- This password reset link will expire in 1 hour
+- If you didn't request this password reset, please ignore this email
+- Your password will not be changed unless you click the link above
+- For security, this link can only be used once
 
 This is an automated email from LoginPage System. Please do not reply to this email.";
     }

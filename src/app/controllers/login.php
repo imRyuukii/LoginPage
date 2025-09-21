@@ -83,6 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 			</form>
 			<p class="footer mt-6">
 				Don't have an account? <a href="./register.php">Register here</a><br>
+				Forgot your password? <a href="./forgot-password.php">Reset password</a><br>
 				Didn't receive verification email? <a href="./resend-verification.php">Resend verification</a>
 			</p>
 		</div>
