@@ -4,8 +4,14 @@ require_once __DIR__ . '/../../config/database.php';
 
 function getUsersData(): array {
     global $db;
-    // Show oldest first: order by created_at ASC, fallback to id ASC
-    $stmt = $db->query('SELECT * FROM users ORDER BY created_at ASC, id ASC');
+    // Admins first, then users; within each group, oldest accounts first
+    $stmt = $db->query(
+        "SELECT * FROM users 
+         ORDER BY 
+           CASE WHEN role = 'admin' THEN 0 ELSE 1 END ASC,
+           created_at ASC,
+           id ASC"
+    );
     return $stmt->fetchAll();
 }
 
