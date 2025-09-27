@@ -2,9 +2,9 @@
 // src/config/database.php
 
 class Database {
-    private $host = '127.0.0.1';
+    private $host = 'localhost';
     private $dbname = 'login_system';
-    private $username = 'root';
+    private $username = 'rootphp';
     private $password = ''; // XAMPP default is empty; update if you set a password
     private $charset = 'utf8mb4';
 
@@ -20,6 +20,9 @@ class Database {
         $this->connect();
     }
 
+    /**
+     * @throws Exception
+     */
     private function connect(): void {
         try {
             $dsn = "mysql:host={$this->host};dbname={$this->dbname};charset={$this->charset}";
