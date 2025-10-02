@@ -37,7 +37,7 @@ class EmailServiceSMTP {
      */
     public function sendVerificationEmail($userEmail, $userName, $verificationToken) {
         $subject = 'Verify Your Email Address - LoginPage';
-        $verificationUrl = 'http://localhost/LoginPage/src/app/controllers/email-verification.php?token=' . urlencode($verificationToken);
+        $verificationUrl = 'https://app.theloginpage.me/LoginPage/src/app/controllers/email-verification.php?token=' . urlencode($verificationToken);
         
         // Load email template
         $htmlBody = $this->getVerificationEmailTemplate($userName, $verificationUrl);
@@ -56,7 +56,7 @@ class EmailServiceSMTP {
      */
     public function sendPasswordResetEmail($userEmail, $userName, $resetToken) {
         $subject = 'Reset Your Password - LoginPage';
-        $resetUrl = 'http://localhost/LoginPage/src/app/controllers/reset-password.php?token=' . urlencode($resetToken);
+        $resetUrl = 'https://app.theloginpage.me/LoginPage/src/app/controllers/reset-password.php?token=' . urlencode($resetToken);
         
         // Load email template
         $htmlBody = $this->getPasswordResetEmailTemplate($userName, $resetUrl);
@@ -317,8 +317,8 @@ This is an automated email from LoginPage System. Please do not reply to this em
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
         $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
         
-        // For localhost setup
-        $baseUrl = $protocol . '://' . $host . '/LoginPage';
+        // For production setup
+        $baseUrl = 'https://app.theloginpage.me/LoginPage';
         
         return $baseUrl;
     }

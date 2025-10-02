@@ -19,7 +19,7 @@ class EmailService {
     public function sendVerificationEmail($userEmail, $userName, $verificationToken) {
         $subject = 'Verify Your Email Address - LoginPage';
         // Temporary hard-coded URL for testing
-        $verificationUrl = 'http://localhost/LoginPage/src/app/controllers/email-verification.php?token=' . urlencode($verificationToken);
+        $verificationUrl = 'https://app.theloginpage.me/LoginPage/src/app/controllers/email-verification.php?token=' . urlencode($verificationToken);
         
         // Load email template
         $htmlBody = $this->getVerificationEmailTemplate($userName, $verificationUrl);
@@ -161,9 +161,9 @@ This is an automated email from LoginPage System. Please do not reply to this em
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
         $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
         
-        // For localhost setup
+        // For production setup
         // Adjust this if your setup is different
-        $baseUrl = $protocol . '://' . $host . '/LoginPage';
+        $baseUrl = 'https://app.theloginpage.me/LoginPage';
         
         return $baseUrl;
     }
