@@ -15,7 +15,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 session_start();
 
-require_once '../../app/models/user-functions-db.php';
+require_once '../../../app/models/user-functions-db.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, no-cache, must-revalidate');

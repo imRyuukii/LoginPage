@@ -11,7 +11,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     ]);
 }
 session_start();
-require_once '../../app/models/user-functions-db.php';
+require_once '../../../app/models/user-functions-db.php';
 require_once '../../app/security/csrf.php';
 csrf_ensure_initialized();
 
