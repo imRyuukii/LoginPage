@@ -1,22 +1,33 @@
-## Update (2025-09-21) - Complete Authentication System 🚀
-- **Password Reset System**: Secure token-based password reset with email links
-- **Email Verification System**: Complete production-ready email verification with Gmail SMTP
-- **Real Email Sending**: Users receive actual verification and password reset emails
-- **Security Enhanced**: CSRF protection, secure tokens, one-hour password reset expiration
+## Update (2025-10-02) - Global Production Deployment 🌍
+- **Global Access**: Deployed at https://app.theloginpage.me using Cloudflare Tunnel
+- **Production Email System**: Real SMTP email verification and password reset
+- **Secure HTTPS**: Automatic SSL/TLS via Cloudflare edge
+- **Arch Linux Setup**: Apache + PHP-FPM + MySQL production configuration
+- **Domain Integration**: Namecheap domain with Cloudflare DNS management
+- **Email URLs Fixed**: All verification/reset links point to public domain
+- **Systemd Service**: Persistent tunnel service with auto-restart
+- **Security Enhanced**: CSRF protection, secure tokens, production-grade authentication
 - **Professional Templates**: Beautiful HTML email templates for verification & password reset
-- **Database Integration**: Email verification & password reset tokens stored securely in MySQL
 - **Complete User Flow**: Registration → Email → Verification → Login → Password Reset
 - **Admin Features**: User management, role assignment, activity tracking
-- **Production Ready**: PHPMailer integration with Gmail SMTP authentication
+- **Production Ready**: Full-stack deployment with real email sending
 
-### Quick start (local XAMPP)
+### Production Deployment (Arch Linux + Cloudflare)
+1. **Domain Setup**: Namecheap domain → Cloudflare nameservers → Active status
+2. **Cloudflare Tunnel**: `cloudflared tunnel create loginpage` → DNS route to app.theloginpage.me
+3. **Apache Configuration**: PHP-FPM, vhost for app.theloginpage.me, Alias to /LoginPage
+4. **Systemd Service**: `cloudflared service install` for persistent tunnel
+5. **Email URLs**: Updated to https://app.theloginpage.me/LoginPage/...
+6. **Test Global Access**: Register from any device → verify email → login
+7. **Admin Access**: Set role='admin' for user in database to access admin panel
+
+### Local Development (XAMPP)
 1. **Database Setup**: Import schema in phpMyAdmin → run scripts/db/schema.sql
 2. **Email Verification**: Run scripts/db/email-verification-update.sql for email tables
 3. **Password Reset**: Run scripts/db/password-reset-update.sql for password reset tables
 4. **Email Configuration**: Set up Gmail SMTP credentials in registration and password reset controllers
-5. **Health Check**: http://localhost/mb/LoginPage/scripts/health.php
+5. **Health Check**: http://localhost/LoginPage/scripts/health.php
 6. **Test Complete Flow**: Register → verify email → login → test password reset
-7. **Admin Access**: Set role='admin' for user in database to access admin panel
 
 ### Useful endpoints
 - **Email Verification**: GET /src/app/controllers/email-verification.php?token=xxx → verifies user email
@@ -35,6 +46,12 @@ Set for the current shell before starting Apache/PHP:
   - $env:DB_PASS = ''
 
 These override src/config/database.php at runtime.
+
+### Production URLs
+- **Live Site**: https://app.theloginpage.me/LoginPage
+- **Email Verification**: https://app.theloginpage.me/LoginPage/src/app/controllers/email-verification.php?token=xxx
+- **Password Reset**: https://app.theloginpage.me/LoginPage/src/app/controllers/reset-password.php?token=xxx
+- **Health Check**: https://app.theloginpage.me/LoginPage/scripts/health.php
 
 # Login Page System—Professional Structure
 
