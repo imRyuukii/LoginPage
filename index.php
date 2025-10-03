@@ -23,7 +23,7 @@ $isLoggedIn = isset($_SESSION['user']);
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Login Page</title>
 	<link rel="icon" type="image/png" href="./src/public/images/logo.png">
-	<link rel="stylesheet" href="./src/public/css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=<?php echo time(); ?>">
 	<script src="./src/public/js/heartbeat.js" defer></script>
 </head>
 <body>
