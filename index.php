@@ -2,29 +2,52 @@
 // Harden session cookie and start session
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_set_cookie_params([
-        'lifetime' => 0,
-        'path' => '/',
-        'domain' => '',
-        'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
-        'httponly' => true,
-        'samesite' => 'Lax',
+        "lifetime" => 0,
+        "path" => "/",
+        "domain" => "",
+        "secure" => !empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] !== "off",
+        "httponly" => true,
+        "samesite" => "Lax",
     ]);
 }
 session_start();
-require_once './src/app/models/user-functions-db.php';
-require_once './src/app/security/csrf.php';
+require_once "./src/app/models/user-functions-db.php";
+require_once "./src/app/security/csrf.php";
 csrf_ensure_initialized();
-$isLoggedIn = isset($_SESSION['user']);
+$isLoggedIn = isset($_SESSION["user"]);
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Login Page</title>
-	<link rel="icon" type="image/png" href="./src/public/images/logo.png">
+	<meta name="description" content="Secure authentication system with email verification, password reset, and real-time user management. Professional login and registration platform.">
+	<meta name="keywords" content="login, authentication, registration, secure login, email verification, password reset, user management">
+	<meta name="author" content="LoginPage System">
+	<meta name="theme-color" content="#8b5cf6">
+
+	<!-- Open Graph / Facebook -->
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="LoginPage - Secure Authentication System">
+	<meta property="og:description" content="Professional authentication platform with email verification and user management">
+	<meta property="og:image" content="./src/public/images/logo.png">
+
+	<!-- Twitter -->
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="LoginPage - Secure Authentication System">
+	<meta name="twitter:description" content="Professional authentication platform with email verification and user management">
+	<meta name="twitter:image" content="./src/public/images/logo.png">
+
+	<title>LoginPage - Secure Authentication System</title>
+
+	<!-- Favicons -->
+	<link rel="icon" type="image/png" sizes="32x32" href="./src/public/images/logo.png">
+	<link rel="apple-touch-icon" href="./src/public/images/logo.png">
+
     <link rel="stylesheet" href="src/public/css/style.css?v=<?php echo time(); ?>">
 	<script src="./src/public/js/heartbeat.js" defer></script>
+	<script src="./src/public/js/toast.js" defer></script>
+	<script src="./src/public/js/form-utils.js" defer></script>
 </head>
 <body>
 	<button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"></button>
@@ -33,17 +56,21 @@ $isLoggedIn = isset($_SESSION['user']);
 	<div class="container page">
 		<div class="card">
 			<?php if ($isLoggedIn): ?>
-				<?php 
-				// PFP based on a user role (fallback to login for backward compatibility)
-				$userRole = $_SESSION['user']['role'] ?? ($_SESSION['user']['login'] === 'admin' ? 'admin' : 'user');
-				$profilePic = ($userRole === 'admin') ? 'admin-pfp.jpg' : 'user-pfp.jpg';
-				$imagePath = "./src/public/images/" . $profilePic;
-				?>
+				<?php
+    // PFP based on a user role (fallback to login for backward compatibility)
+    $userRole =
+        $_SESSION["user"]["role"] ??
+        ($_SESSION["user"]["login"] === "admin" ? "admin" : "user");
+    $profilePic = $userRole === "admin" ? "admin-pfp.jpg" : "user-pfp.jpg";
+    $imagePath = "./src/public/images/" . $profilePic;
+    ?>
 				<img src="<?php echo $imagePath; ?>" alt="Profile Picture" class="profile-picture">
 			<?php endif; ?>
 			<h1 class="welcome-text">WELCOME</h1>
 			<?php if ($isLoggedIn): ?>
-				<p>Logged in as: <strong><?php echo htmlspecialchars($_SESSION['user']['login']); ?></strong></p>
+				<p>Logged in as: <strong><?php echo htmlspecialchars(
+        $_SESSION["user"]["login"],
+    ); ?></strong></p>
 				<div class="link-row mt-3">
 					<a class="button" href="./src/app/controllers/profile.php">Go to profile</a>
 					<form method="post" action="./src/app/controllers/logout.php" style="display:inline;">
@@ -64,7 +91,7 @@ $isLoggedIn = isset($_SESSION['user']);
     <script>
     (function() {
         const CSRF_TOKEN = '<?php echo htmlspecialchars(csrf_token()); ?>';
-        const IS_LOGGED_IN = <?php echo $isLoggedIn ? 'true' : 'false'; ?>;
+        const IS_LOGGED_IN = <?php echo $isLoggedIn ? "true" : "false"; ?>;
         window.addEventListener('DOMContentLoaded', function(){
             if (IS_LOGGED_IN && window.Heartbeat) {
                 window.Heartbeat.installHeartbeatOnLoad({ url: './src/public/api/heartbeat.php', csrf: CSRF_TOKEN });
