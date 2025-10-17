@@ -13,20 +13,11 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 session_start();
 require_once "../models/user-functions-db.php";
 require_once "../security/csrf.php";
-require_once __DIR__ . "/../services/RateLimiter.php"; // NEW: Rate limiting
 csrf_ensure_initialized();
 
 $error = "";
-$rateLimiter = new RateLimiter();
 
-// Check rate limiting BEFORE processing login
-if ($rateLimiter->isBlocked("login")) {
-    $timeRemaining = $rateLimiter->getBlockedTimeRemaining("login");
-    $timeFormatted = RateLimiter::formatTimeRemaining($timeRemaining);
-    $error = "Too many login attempts. Please try again in {$timeFormatted}.";
-}
-
-if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
     csrf_require_post();
     $login = isset($_POST["login"]) ? trim($_POST["login"]) : "";
     $password = isset($_POST["password"]) ? trim($_POST["password"]) : "";
@@ -38,12 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
         if (!$user["email_verified"]) {
             $error =
                 "Please verify your email address before logging in. Check your email for the verification link.";
-            // Record failed attempt (email not verified)
-            $rateLimiter->recordAttempt("login");
         } else {
-            // SUCCESS! Clear rate limits
-            $rateLimiter->clearAttempts("login");
-
             // Update last seen timestamps
             updateLastActive($user["id"]);
             updateUserActivity($user["id"]);
@@ -61,25 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
             exit();
         }
     } else {
-        // Failed login - record attempt
-        $rateLimiter->recordAttempt("login");
-
-        // If this attempt triggered a block, show block message immediately
-        if ($rateLimiter->isBlocked("login")) {
-            $timeRemaining = $rateLimiter->getBlockedTimeRemaining("login");
-            $error =
-                "Too many login attempts. Please try again in " .
-                RateLimiter::formatTimeRemaining($timeRemaining) .
-                ".";
-        } else {
-            // Show how many attempts remaining
-            $remaining = $rateLimiter->getRemainingAttempts("login");
-            if ($remaining["remaining"] > 0 && $remaining["remaining"] <= 2) {
-                $error = "Invalid login or password. {$remaining["remaining"]} attempt(s) remaining before lockout.";
-            } else {
-                $error = "Invalid login or password.";
-            }
-        }
+        $error = "Invalid login or password.";
     }
 }
 ?>
@@ -111,27 +79,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
 			<form method="post" action="" id="loginForm">
 				<?php echo csrf_field(); ?>
 				<label for="login">Username or Email</label>
-				<input type="text" id="login" name="login" required autocomplete="username" placeholder="Enter your username or email" <?php echo $rateLimiter->isBlocked(
-        "login",
-    )
-        ? "disabled"
-        : ""; ?>>
+				<input type="text" id="login" name="login" required autocomplete="username" placeholder="Enter your username or email">
 
 				<label for="password">Password</label>
-				<input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Enter your password" <?php echo $rateLimiter->isBlocked(
-        "login",
-    )
-        ? "disabled"
-        : ""; ?>>
+				<input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Enter your password">
 
 				<div class="link-row centered mt-4">
-					<button class="button primary" type="submit" id="loginBtn" <?php echo $rateLimiter->isBlocked(
-         "login",
-     )
-         ? "disabled"
-         : ""; ?>>
-						<?php echo $rateLimiter->isBlocked("login") ? "Locked" : "Login"; ?>
-					</button>
+					<button class="button primary" type="submit" id="loginBtn">Login</button>
 					<a class="button" href="../../../index.php">Back to home</a>
 				</div>
 			</form>
@@ -183,7 +137,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
         <?php if (!empty($error)): ?>
         window.addEventListener('DOMContentLoaded', function() {
             if (window.Toast) {
-                Toast.error(<?php echo json_encode($error); ?>, 6000);
+                Toast.error(<?php echo json_encode($error); ?>, 5000);
             }
         });
         <?php endif; ?>

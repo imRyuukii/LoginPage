@@ -3,70 +3,90 @@
 // Harden session cookie and start session
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_set_cookie_params([
-        'lifetime' => 0,
-        'path' => '/',
-        'domain' => '',
-        'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
-        'httponly' => true,
-        'samesite' => 'Lax',
+        "lifetime" => 0,
+        "path" => "/",
+        "domain" => "",
+        "secure" => !empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] !== "off",
+        "httponly" => true,
+        "samesite" => "Lax",
     ]);
 }
 session_start();
-require_once '../models/user-functions-db.php';
-require_once '../security/csrf.php';
-require_once '../services/EmailServiceSMTP.php';
+require_once "../models/user-functions-db.php";
+require_once "../security/csrf.php";
+require_once "../services/EmailServiceSMTP.php";
+require_once __DIR__ . "/../services/RateLimiter.php";
 csrf_ensure_initialized();
 
-$error = '';
-$success = '';
+$error = "";
+$success = "";
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+$rateLimiter = new RateLimiter();
+if ($rateLimiter->isBlocked("password_reset")) {
+    $timeRemaining = $rateLimiter->getBlockedTimeRemaining("password_reset");
+    $error =
+        "Too many password reset requests. Please try again in " .
+        RateLimiter::formatTimeRemaining($timeRemaining) .
+        ".";
+}
+
+if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
     csrf_require_post();
-    $email = isset($_POST['email']) ? trim($_POST['email']) : '';
-    
+    $email = isset($_POST["email"]) ? trim($_POST["email"]) : "";
+
     if (empty($email)) {
-        $error = 'Please enter your email address.';
+        $error = "Please enter your email address.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = 'Please enter a valid email address.';
+        $error = "Please enter a valid email address.";
     } else {
+        // Count this as a password reset request for rate limiting
+        $rateLimiter->recordAttempt("password_reset");
         try {
             // Create password reset token
             $result = createPasswordResetToken($email);
-            
-            if ($result['success']) {
+
+            if ($result["success"]) {
                 // Send password reset email
                 $emailService = new EmailServiceSMTP();
-                
+
                 // Use the same SMTP configuration as registration
                 $emailService->enableRealEmails(
-                    'smtp.gmail.com',
+                    "smtp.gmail.com",
                     587,
                     // Note: These should match your registration email configuration
                     // In a production environment, these would be in environment variables
-                    $_ENV['SMTP_USERNAME'] ?? 'zsplitt014@gmail.com',
-                    $_ENV['SMTP_PASSWORD'] ?? 'jusb keps jlag xpis',
-                    $_ENV['SMTP_FROM_EMAIL'] ?? 'noreply@yoursite.com'
+                    $_ENV["SMTP_USERNAME"] ?? "zsplitt014@gmail.com",
+                    $_ENV["SMTP_PASSWORD"] ?? "jusb keps jlag xpis",
+                    $_ENV["SMTP_FROM_EMAIL"] ?? "noreply@yoursite.com",
                 );
-                
+
                 $emailSent = $emailService->sendPasswordResetEmail(
                     $email,
-                    $result['user']['name'],
-                    $result['token']
+                    $result["user"]["name"],
+                    $result["token"],
                 );
-                
+
                 if ($emailSent) {
-                    $success = 'Password reset instructions have been sent to ' . htmlspecialchars($email) . '. Please check your email and follow the instructions to reset your password.';
+                    $success =
+                        "Password reset instructions have been sent to " .
+                        htmlspecialchars($email) .
+                        ". Please check your email and follow the instructions to reset your password.";
                 } else {
-                    $error = 'We could not send the password reset email. Please try again later or contact support.';
+                    $error =
+                        "We could not send the password reset email. Please try again later or contact support.";
                 }
             } else {
                 // For security, don't reveal if email exists or not
                 // Always show success message even if email doesn't exist
-                $success = 'If an account with that email address exists, password reset instructions have been sent to ' . htmlspecialchars($email) . '.';
+                $success =
+                    "If an account with that email address exists, password reset instructions have been sent to " .
+                    htmlspecialchars($email) .
+                    ".";
             }
         } catch (Exception $e) {
-            error_log('Password reset request failed: ' . $e->getMessage());
-            $error = 'An error occurred while processing your password reset request. Please try again later.';
+            error_log("Password reset request failed: " . $e->getMessage());
+            $error =
+                "An error occurred while processing your password reset request. Please try again later.";
         }
     }
 }
@@ -87,13 +107,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="container page">
         <div class="card">
             <h1>🔐 Forgot Password</h1>
-            
+
             <?php if (!empty($error)): ?>
                 <div class="alert error mt-3">
                     <?php echo htmlspecialchars($error); ?>
                 </div>
             <?php endif; ?>
-            
+
             <?php if (!empty($success)): ?>
                 <div class="alert success mt-3">
                     <?php echo htmlspecialchars($success); ?>
@@ -106,12 +126,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <p class="mt-3">
                     Enter your email address below and we'll send you instructions on how to reset your password.
                 </p>
-                
+
                 <form method="post" action="">
                     <?php echo csrf_field(); ?>
                     <label for="email">Email Address</label>
-                    <input type="email" id="email" name="email" required 
-                           value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>"
+                    <input type="email" id="email" name="email" required
+                           value="<?php echo htmlspecialchars(
+                               $_POST["email"] ?? "",
+                           ); ?>"
                            placeholder="Enter your email address">
 
                     <div class="link-row centered mt-4">
@@ -120,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </form>
             <?php endif; ?>
-            
+
             <div class="mt-6">
                 <h3>💡 Password Reset Tips</h3>
                 <ul style="text-align: left; max-width: 400px; margin: 0 auto;">
@@ -131,7 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <li><strong>Security:</strong> Your password won't change until you complete the reset</li>
                 </ul>
             </div>
-            
+
             <div class="mt-6">
                 <h3>📞 Need Help?</h3>
                 <p style="text-align: center;">
@@ -143,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
     <div class="demo-warning">*This is a demo version of the website</div>
-    
+
     <script>
     (function() {
         const root = document.documentElement;

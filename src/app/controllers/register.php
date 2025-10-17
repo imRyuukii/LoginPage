@@ -14,12 +14,23 @@ session_start();
 require_once "../models/user-functions-db.php";
 require_once "../security/csrf.php";
 require_once "../services/EmailService.php";
+require_once __DIR__ . "/../services/RateLimiter.php";
 csrf_ensure_initialized();
 
 $error = "";
 $success = "";
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
+$rateLimiter = new RateLimiter();
+
+if ($rateLimiter->isBlocked("register")) {
+    $timeRemaining = $rateLimiter->getBlockedTimeRemaining("register");
+    $error =
+        "Too many registration attempts. Please try again in " .
+        RateLimiter::formatTimeRemaining($timeRemaining) .
+        ".";
+}
+
+if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
     csrf_require_post();
     $username = isset($_POST["username"]) ? trim($_POST["username"]) : "";
     $password = isset($_POST["password"]) ? trim($_POST["password"]) : "";
@@ -31,9 +42,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     if ($password !== $confirmPassword) {
         $error = "Passwords do not match.";
+        $rateLimiter->recordAttempt("register");
     } else {
         $result = registerUser($username, $password, $name, $email);
         if ($result["success"]) {
+            $rateLimiter->clearAttempts("register");
             // Get the newly created user to send verification email
             $newUser = findUserByEmail($email);
 
@@ -84,6 +97,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             }
         } else {
             $error = $result["message"];
+            $rateLimiter->recordAttempt("register");
         }
     }
 }
@@ -205,7 +219,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             Toast.success(<?php echo json_encode($success); ?>, 8000);
         }
         <?php endif; ?>
-        
+
         <?php if (!empty($error)): ?>
         if (window.Toast) {
             Toast.error(<?php echo json_encode($error); ?>, 5000);
