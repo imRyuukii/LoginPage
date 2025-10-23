@@ -22,6 +22,20 @@ if (!isset($_SESSION['user'])) {
 
 $user = $_SESSION['user'];
 
+// Fetch fresh user data from database to get updated profile picture
+try {
+    $stmt = $db->query('SELECT * FROM users WHERE id = ?', [$user['id']]);
+    $dbUser = $stmt->fetch();
+    if ($dbUser) {
+        // Update session with fresh data
+        $_SESSION['user'] = array_merge($_SESSION['user'], $dbUser);
+        $user = $_SESSION['user'];
+    }
+} catch (Exception $e) {
+    // If database fetch fails, continue with session data
+    error_log('Failed to fetch user data: ' . $e->getMessage());
+}
+
 // Optional admin search/filter inputs via GET
 $searchQ = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
 $filterRole = isset($_GET['role']) ? trim((string)$_GET['role']) : '';
@@ -51,12 +65,36 @@ if ($searchQ !== '' || ($filterRole !== '' && in_array($filterRole, ['admin', 'u
 	<div class="container page">
 		<div class="card">
 			<?php 
-			// PFP based on a user role (fallback to login for backward compatibility)
-			$userRole = $user['role'] ?? ($user['login'] === 'admin' ? 'admin' : 'user');
-			$profilePic = ($userRole === 'admin') ? 'admin-pfp.jpg' : 'user-pfp.jpg';
-			$imagePath = "../../public/images/" . $profilePic;
+			// Check if user has custom profile picture
+			if (!empty($user['profile_picture']) && file_exists(__DIR__ . '/../../public/images/profile-pictures/' . $user['profile_picture'])) {
+				$imagePath = '../../public/images/profile-pictures/' . htmlspecialchars($user['profile_picture']);
+			} else {
+				// Fallback to default based on role
+				$userRole = $user['role'] ?? ($user['login'] === 'admin' ? 'admin' : 'user');
+				$profilePic = ($userRole === 'admin') ? 'admin-pfp.jpg' : 'user-pfp.jpg';
+				$imagePath = "../../public/images/" . $profilePic;
+			}
 			?>
-			<img src="<?php echo $imagePath; ?>" alt="Profile Picture" class="profile-picture">
+			<div class="profile-picture-container">
+				<img src="<?php echo $imagePath; ?>" alt="Profile Picture" class="profile-picture" id="profilePictureImg">
+				<div class="upload-overlay">
+					<span>Click to upload</span>
+				</div>
+			</div>
+			
+			<!-- Hidden upload form -->
+			<form id="profilePictureForm" method="post" action="upload-profile-picture.php" enctype="multipart/form-data" style="display: none;">
+				<?php echo csrf_field(); ?>
+				<input type="file" id="profilePictureInput" name="profile_picture" accept="image/jpeg,image/png,image/gif,image/webp">
+			</form>
+			
+			<?php if (!empty($_SESSION['upload_success'])): ?>
+				<div class="alert success mt-3"><?php echo htmlspecialchars($_SESSION['upload_success']); unset($_SESSION['upload_success']); ?></div>
+			<?php endif; ?>
+			<?php if (!empty($_SESSION['upload_error'])): ?>
+				<div class="alert error mt-3"><?php echo htmlspecialchars($_SESSION['upload_error']); unset($_SESSION['upload_error']); ?></div>
+			<?php endif; ?>
+			
 			<h1>User Profile</h1>
 			<dl class="data mt-3">
 				<dt>Login</dt>
@@ -146,14 +184,21 @@ if ($isAdmin):
                 <?php endif; ?>
 				<div class="users-list">
 					<?php foreach ($users as $userData): ?>
-						<div class="user-item" data-user-id="<?php echo (int)($userData['id'] ?? 0); ?>">
-							<div class="user-avatar">
-							<?php 
-							$userProfilePic = ($userData['role'] === 'admin') ? 'admin-pfp.jpg' : 'user-pfp.jpg';
-							?>
-							<img src="../../public/images/<?php echo $userProfilePic; ?>" alt="<?php echo htmlspecialchars($userData['name']); ?>" class="user-avatar-img">
-                                <span class="online-dot" aria-label="Online" title="Online"></span>
-						</div>
+                        <div class="user-item" data-user-id="<?php echo (int)($userData['id'] ?? 0); ?>">
+                        <div class="user-avatar">
+                            <?php
+                            // Check if user has custom profile picture
+                            if (!empty($userData['profile_picture']) && file_exists(__DIR__ . '/../../public/images/profile-pictures/' . $userData['profile_picture'])) {
+                                $userImagePath = '../../public/images/profile-pictures/' . htmlspecialchars($userData['profile_picture']);
+                            } else {
+                                // Fallback to default based on role
+                                $userProfilePic = ($userData['role'] === 'admin') ? 'admin-pfp.jpg' : 'user-pfp.jpg';
+                                $userImagePath = '../../public/images/' . $userProfilePic;
+                            }
+                            ?>
+                            <img src="<?php echo $userImagePath; ?>" alt="<?php echo htmlspecialchars($userData['name']); ?>" class="user-avatar-img">
+                            <span class="online-dot" aria-label="Online" title="Online"></span>
+                        </div>
 						<div class="user-info">
 							<div class="user-name">
 								<h3><?php echo htmlspecialchars($userData['name']); ?></h3>
@@ -174,19 +219,19 @@ if ($isAdmin):
                             <div class="user-actions">
                                 <?php if (($userData['id'] ?? null) !== ($user['id'] ?? null)): ?>
                                     <?php if (($userData['role'] ?? 'user') !== 'admin'): ?>
-                                    <form method="post" action="./make-admin.php" onsubmit="return confirm('Promote this user to admin?');" style="display:inline; margin-right: 8px;">
+                                    <form method="post" action="./make-admin.php" onsubmit="return confirm('Promote this user to admin?');" style="display:inline; margin-top: 0; margin-right: 8px;">
                                         <?php echo csrf_field(); ?>
                                         <input type="hidden" name="user_id" value="<?php echo (int)($userData['id'] ?? 0); ?>">
                                         <button class="button" type="submit">Make Admin</button>
                                     </form>
                                     <?php else: ?>
-                                    <form method="post" action="./make-user.php" onsubmit="return confirm('Demote this admin to user?');" style="display:inline; margin-right: 8px;">
+                                    <form method="post" action="./make-user.php" onsubmit="return confirm('Demote this admin to user?');" style="display:inline; margin-top: 0; margin-right: 8px;">
                                         <?php echo csrf_field(); ?>
                                         <input type="hidden" name="user_id" value="<?php echo (int)($userData['id'] ?? 0); ?>">
                                         <button class="button" type="submit">Make User</button>
                                     </form>
                                     <?php endif; ?>
-                                    <form method="post" action="./delete-user.php" onsubmit="return confirm('Delete this user?');" style="display:inline;">
+                                    <form method="post" action="./delete-user.php" onsubmit="return confirm('Delete this user?');" style="display:inline; margin-top: 0;">
                                         <?php echo csrf_field(); ?>
                                         <input type="hidden" name="user_id" value="<?php echo (int)($userData['id'] ?? 0); ?>">
                                         <button class="button" type="submit">Delete</button>
@@ -263,13 +308,14 @@ if ($isAdmin):
         });
     })();
     
-    // Heartbeat system for real-time online status
+    // Heartbeat system for real-time online status (skip if shared Heartbeat is present)
     (function() {
+        if (window.Heartbeat) { return; }
         let heartbeatInterval;
         let isPageVisible = true;
 
         function sendHeartbeat() {
-            fetch('../../public/api/heartbeat.php', {
+            return fetch('../../public/api/heartbeat.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: 'csrf=' + encodeURIComponent(CSRF_TOKEN)
@@ -281,16 +327,14 @@ if ($isAdmin):
             if (heartbeatInterval) clearInterval(heartbeatInterval);
             // After every heartbeat, trigger a live refresh so "Online" stays fresh even without navigation
             heartbeatInterval = setInterval(function(){
-                sendHeartbeat().then(function(){
-                    if (window.__refreshLastActive) { window.__refreshLastActive(); }
-                });
+                sendHeartbeat();
+                if (window.__refreshLastActive) { window.__refreshLastActive(); }
             }, 30000);
             // Send initial heartbeat and immediately refresh the user list when it succeeds
-            sendHeartbeat().then(function(){
-                // Flag in case the live-update script hasn't loaded yet
-                window.__deferLastActiveRefresh = true;
-                if (window.__refreshLastActive) { window.__refreshLastActive(); }
-            });
+            sendHeartbeat();
+            // Flag in case the live-update script hasn't loaded yet
+            window.__deferLastActiveRefresh = true;
+            if (window.__refreshLastActive) { window.__refreshLastActive(); }
         }
         // Stop heartbeat when the page is hidden
         document.addEventListener('visibilitychange', function() {
@@ -343,6 +387,44 @@ const url = ENDPOINT + '?t=' + Date.now() + '&ids=' + encodeURIComponent(visible
         tick();
         setInterval(tick, 10000); // 10s for snappier updates
     })();
+    </script>
+    <script>
+        // Profile picture upload handler
+        (function() {
+            const img = document.getElementById('profilePictureImg');
+            const input = document.getElementById('profilePictureInput');
+            const form = document.getElementById('profilePictureForm');
+
+            if (!img || !input || !form) return;
+
+            img.addEventListener('click', function() {
+                input.click();
+            });
+
+            input.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const file = this.files[0];
+                    const maxSize = 2 * 1024 * 1024; // 2MB
+                    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
+                    if (file.size > maxSize) {
+                        alert('File size exceeds 2MB limit.');
+                        this.value = '';
+                        return;
+                    }
+
+                    if (!allowedTypes.includes(file.type)) {
+                        alert('Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.');
+                        this.value = '';
+                        return;
+                    }
+
+                    if (confirm('Upload this image as your profile picture?')) {
+                        form.submit();
+                    }
+                }
+            });
+        })();
     </script>
 </body>
 </html>

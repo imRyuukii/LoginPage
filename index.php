@@ -15,6 +15,22 @@ require_once "./src/app/models/user-functions-db.php";
 require_once "./src/app/security/csrf.php";
 csrf_ensure_initialized();
 $isLoggedIn = isset($_SESSION["user"]);
+
+// If logged in, fetch fresh user data to get updated profile picture
+if ($isLoggedIn) {
+    require_once "./src/config/database.php";
+    try {
+        $stmt = $db->query('SELECT * FROM users WHERE id = ?', [$_SESSION["user"]["id"]]);
+        $dbUser = $stmt->fetch();
+        if ($dbUser) {
+            // Update session with fresh data
+            $_SESSION["user"] = array_merge($_SESSION["user"], $dbUser);
+        }
+    } catch (Exception $e) {
+        // If database fetch fails, continue with session data
+        error_log('Failed to fetch user data: ' . $e->getMessage());
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -57,12 +73,15 @@ $isLoggedIn = isset($_SESSION["user"]);
 		<div class="card">
 			<?php if ($isLoggedIn): ?>
 				<?php
-    // PFP based on a user role (fallback to login for backward compatibility)
-    $userRole =
-        $_SESSION["user"]["role"] ??
-        ($_SESSION["user"]["login"] === "admin" ? "admin" : "user");
-    $profilePic = $userRole === "admin" ? "admin-pfp.jpg" : "user-pfp.jpg";
-    $imagePath = "./src/public/images/" . $profilePic;
+    // Check if user has custom profile picture
+    if (!empty($_SESSION["user"]["profile_picture"]) && file_exists('./src/public/images/profile-pictures/' . $_SESSION["user"]["profile_picture"])) {
+        $imagePath = './src/public/images/profile-pictures/' . htmlspecialchars($_SESSION["user"]["profile_picture"]);
+    } else {
+        // Fallback to default based on role
+        $userRole = $_SESSION["user"]["role"] ?? ($_SESSION["user"]["login"] === "admin" ? "admin" : "user");
+        $profilePic = $userRole === "admin" ? "admin-pfp.jpg" : "user-pfp.jpg";
+        $imagePath = "./src/public/images/" . $profilePic;
+    }
     ?>
 				<img src="<?php echo $imagePath; ?>" alt="Profile Picture" class="profile-picture">
 			<?php endif; ?>

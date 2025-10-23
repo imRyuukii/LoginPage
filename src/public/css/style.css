@@ -510,12 +510,13 @@ select option {
     box-shadow: var(--shadow-md);
 }
 .user-avatar {
+    top: -5px;
     position: relative;
     flex-shrink: 0;
 }
 .user-avatar-img {
-    width: 56px;
-    height: 56px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     border: 2px solid var(--border);
     object-fit: cover;
@@ -857,8 +858,8 @@ select option {
         padding: 16px;
     }
     .user-avatar-img {
-        width: 50px;
-        height: 50px;
+        width: 52px;
+        height: 52px;
     }
     .user-last-active {
         flex: 0 0 120px;
@@ -1518,8 +1519,8 @@ select option {
     overflow: visible;
 }
 .user-avatar-img {
-    width: 56px;
-    height: 56px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     border: 2px solid var(--border);
     object-fit: cover;
@@ -2336,8 +2337,8 @@ input[type="button"] {
 }
 
 .user-avatar-img {
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     border: 2px solid var(--border);
     object-fit: cover;
@@ -3011,4 +3012,69 @@ input[type="button"] {
     .toast {
         min-width: 0;
     }
+}
+
+/* =========================
+   Profile Picture Upload
+   ========================= */
+.profile-picture-container {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+/* Place container where the image used to be (absolute in card corner) */
+.card .profile-picture-container {
+    position: absolute !important;
+    top: 16px !important;
+    right: 16px !important;
+    width: 60px !important;
+    height: 60px !important;
+    z-index: 10 !important;
+}
+
+.profile-picture-container:hover {
+    transform: scale(1.05);
+}
+
+.profile-picture-container:hover .upload-overlay {
+    opacity: 1;
+}
+
+.upload-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    font-size: 0.8em;
+    font-weight: 500;
+    text-align: center;
+    pointer-events: none;
+}
+
+.upload-overlay span {
+    padding: 0 8px;
+}
+
+/* Ensure profile picture is clickable and fills container */
+.profile-picture-container .profile-picture {
+    position: static !important;
+    width: 100% !important;
+    height: 100% !important;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.profile-picture-container .profile-picture:hover {
+    filter: brightness(0.9);
 }
