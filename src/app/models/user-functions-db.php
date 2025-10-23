@@ -224,12 +224,13 @@ function getUsersByIds(array $ids): array
     return $stmt->fetchAll();
 }
 
+
 function updateLastActive(int $userId): bool
 {
     try {
         global $db;
         $stmt = $db->query(
-            "UPDATE users SET last_active = NOW() WHERE id = ?",
+            "UPDATE users SET last_activity = UTC_TIMESTAMP() WHERE id = ?",
             [$userId],
         );
         return $stmt->rowCount() >= 0;
@@ -606,21 +607,30 @@ function getLastActiveFormatted($lastActive, $lastActivity = null): string
         return "Never";
     }
 
-    $lastActiveTime = new DateTime($timeToCheck);
-    $now = new DateTime();
-    $diff = $now->diff($lastActiveTime);
+    // Now both database and PHP are using UTC, so direct comparison works
+    $lastActiveTimestamp = strtotime($timeToCheck);
+    $nowTimestamp = time();
+    $diffSeconds = $nowTimestamp - $lastActiveTimestamp;
 
-    if ($diff->days == 0 && $diff->h == 0 && $diff->i <= 2) {
+    if ($diffSeconds < 0) {
+        $diffSeconds = 0; // Handle future timestamps
+    }
+
+    $diffMinutes = floor($diffSeconds / 60);
+    $diffHours = floor($diffSeconds / 3600);
+    $diffDays = floor($diffSeconds / 86400);
+
+    if ($diffMinutes <= 2) {
         return "Online";
     }
-    if ($diff->days > 0) {
-        return $diff->days . " day" . ($diff->days > 1 ? "s" : "") . " ago";
+    if ($diffDays > 0) {
+        return $diffDays . " day" . ($diffDays > 1 ? "s" : "") . " ago";
     }
-    if ($diff->h > 0) {
-        return $diff->h . " hour" . ($diff->h > 1 ? "s" : "") . " ago";
+    if ($diffHours > 0) {
+        return $diffHours . " hour" . ($diffHours > 1 ? "s" : "") . " ago";
     }
-    if ($diff->i > 0) {
-        return $diff->i . " minute" . ($diff->i > 1 ? "s" : "") . " ago";
+    if ($diffMinutes > 0) {
+        return $diffMinutes . " minute" . ($diffMinutes > 1 ? "s" : "") . " ago";
     }
     return "Just now";
 }

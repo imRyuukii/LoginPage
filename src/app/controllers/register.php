@@ -109,7 +109,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Create your account - Secure registration with email verification">
     <meta name="robots" content="noindex, nofollow">
-    <meta name="theme-color" content="#8b5cf6">
+    	<meta name="theme-color" content="#124e66">
     <title>Register - LoginPage System</title>
     <link rel="icon" type="image/png" sizes="32x32" href="../../public/images/logo.png">
     <link rel="apple-touch-icon" href="../../public/images/logo.png">

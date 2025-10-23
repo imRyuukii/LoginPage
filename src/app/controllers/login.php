@@ -90,7 +90,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="description" content="Login to your account - Secure authentication with email verification">
 	<meta name="robots" content="noindex, nofollow">
-	<meta name="theme-color" content="#8b5cf6">
+	<meta name="theme-color" content="#124e66">
 	<title>Login - LoginPage System</title>
 	<link rel="icon" type="image/png" sizes="32x32" href="../../public/images/logo.png">
 	<link rel="apple-touch-icon" href="../../public/images/logo.png">

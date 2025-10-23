@@ -24,7 +24,7 @@ $isLoggedIn = isset($_SESSION["user"]);
 	<meta name="description" content="Secure authentication system with email verification, password reset, and real-time user management. Professional login and registration platform.">
 	<meta name="keywords" content="login, authentication, registration, secure login, email verification, password reset, user management">
 	<meta name="author" content="LoginPage System">
-	<meta name="theme-color" content="#8b5cf6">
+	<meta name="theme-color" content="#124e66">
 
 	<!-- Open Graph / Facebook -->
 	<meta property="og:type" content="website">

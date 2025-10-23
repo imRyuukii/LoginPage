@@ -221,6 +221,7 @@ if ($isAdmin):
 	<?php endif; ?>
 	<div class="demo-warning">*This is a demo version of the website</div>
     <script>
+        const CSRF_TOKEN = '<?php echo htmlspecialchars(csrf_token()); ?>';
     (function() {
         const CSRF_TOKEN = '<?php echo htmlspecialchars(csrf_token()); ?>';
         window.addEventListener('DOMContentLoaded', function(){
@@ -268,16 +269,11 @@ if ($isAdmin):
         let isPageVisible = true;
 
         function sendHeartbeat() {
-            if (!isPageVisible) return Promise.resolve();
-            return fetch('../../public/api/heartbeat.php', {
+            fetch('../../public/api/heartbeat.php', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: 'csrf=' + encodeURIComponent(CSRF_TOKEN)
-            }).catch(function(error) {
-                console.log('Heartbeat failed:', error);
-            });
+            }).catch(function(e){ /* silent */ });
         }
         
         // Send heartbeat every 30 seconds

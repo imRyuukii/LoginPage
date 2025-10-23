@@ -32,6 +32,9 @@ class Database {
                 PDO::ATTR_EMULATE_PREPARES => false,
             ];
             $this->pdo = new PDO($dsn, $this->username, $this->password, $options);
+
+            // Set MySQL timezone to UTC for consistent timestamp handling
+            $this->pdo->exec("SET time_zone = '+00:00'");
         } catch (PDOException $e) {
             error_log('Database connection failed: ' . $e->getMessage());
             throw new Exception('Database connection failed');
