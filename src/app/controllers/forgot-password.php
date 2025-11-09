@@ -49,16 +49,21 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
                 // Send password reset email
                 $emailService = new EmailServiceSMTP();
 
-                // Use the same SMTP configuration as registration
-                $emailService->enableRealEmails(
-                    "smtp.gmail.com",
-                    587,
-                    // Note: These should match your registration email configuration
-                    // In a production environment, these would be in environment variables
-                    $_ENV["SMTP_USERNAME"] ?? "zsplitt014@gmail.com",
-                    $_ENV["SMTP_PASSWORD"] ?? "jusb keps jlag xpis",
-                    $_ENV["SMTP_FROM_EMAIL"] ?? "noreply@yoursite.com",
-                );
+                // Configure real email sending from environment variables if available
+                $smtpHost = getenv('SMTP_HOST') ?: null;
+                $smtpPort = getenv('SMTP_PORT') ?: null;
+                $smtpUser = getenv('SMTP_USERNAME') ?: null;
+                $smtpPass = getenv('SMTP_PASSWORD') ?: null;
+                $smtpFrom = getenv('SMTP_FROM_EMAIL') ?: null;
+                if ($smtpHost && $smtpPort && $smtpUser && $smtpPass && $smtpFrom) {
+                    $emailService->enableRealEmails(
+                        $smtpHost,
+                        (int)$smtpPort,
+                        $smtpUser,
+                        $smtpPass,
+                        $smtpFrom
+                    );
+                }
 
                 $emailSent = $emailService->sendPasswordResetEmail(
                     $email,

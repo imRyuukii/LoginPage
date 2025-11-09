@@ -35,20 +35,20 @@ if ($role !== 'admin') {
 
 $userId = filter_input(INPUT_POST, 'user_id', FILTER_VALIDATE_INT);
 if (!$userId) {
-    header('Location: ./profile.php?error=' . urlencode('Invalid user id'));
+    header('Location: /LoginPage/src/app/controllers/profile.php?error=' . urlencode('Invalid user id'));
     exit;
 }
 
 // Prevent demoting yourself from this UI path
 if (!empty($currentUser['id']) && (int)$currentUser['id'] === (int)$userId) {
-    header('Location: ./profile.php?error=' . urlencode("You can't change your own role here"));
+    header('Location: /LoginPage/src/app/controllers/profile.php?error=' . urlencode("You can't change your own role here"));
     exit;
 }
 
 if (updateUserRole((int)$userId, 'user')) {
-    header('Location: ./profile.php?msg=demoted');
+    header('Location: /LoginPage/src/app/controllers/profile.php?msg=demoted');
     exit;
 } else {
-    header('Location: ./profile.php?error=' . urlencode('Demote failed'));
+    header('Location: /LoginPage/src/app/controllers/profile.php?error=' . urlencode('Demote failed'));
     exit;
 }

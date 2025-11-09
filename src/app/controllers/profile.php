@@ -17,7 +17,7 @@ require_once '../security/csrf.php';
 csrf_ensure_initialized();
 
 if (!isset($_SESSION['user'])) {
-	header('Location: login.php?redirect=profile');
+	header('Location: /LoginPage/src/app/controllers/login.php?redirect=profile');
 	exit;
 }
 
@@ -55,9 +55,9 @@ if ($searchQ !== '' || ($filterRole !== '' && in_array($filterRole, ['admin', 'u
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>User Profile</title>
-	<link rel="icon" type="image/png" href="../../public/images/logo.png">
-    <link rel="stylesheet" href="../../public/css/style.css?v=<?php echo time(); ?>">
-	<script src="../../public/js/heartbeat.js" defer></script>
+	<link rel="icon" type="image/png" href="/LoginPage/src/public/images/logo.png">
+    <link rel="stylesheet" href="/LoginPage/src/public/css/style.css?v=<?php echo time(); ?>">
+	<script src="/LoginPage/src/public/js/heartbeat.js" defer></script>
 </head>
 <body>
 	<?php $NAV_BASE='../../'; include __DIR__ . '/../../public/partials/navbar.php'; ?>
@@ -66,12 +66,12 @@ if ($searchQ !== '' || ($filterRole !== '' && in_array($filterRole, ['admin', 'u
 			<?php 
 			// Check if user has custom profile picture
 			if (!empty($user['profile_picture']) && file_exists(__DIR__ . '/../../public/images/profile-pictures/' . $user['profile_picture'])) {
-				$imagePath = '../../public/images/profile-pictures/' . htmlspecialchars($user['profile_picture']);
+				$imagePath = '/LoginPage/src/public/images/profile-pictures/' . htmlspecialchars($user['profile_picture']);
 			} else {
 				// Fallback to default based on role
 				$userRole = $user['role'] ?? ($user['login'] === 'admin' ? 'admin' : 'user');
 				$profilePic = ($userRole === 'admin') ? 'admin-pfp.jpg' : 'user-pfp.jpg';
-				$imagePath = "../../public/images/" . $profilePic;
+				$imagePath = "/LoginPage/src/public/images/" . $profilePic;
 			}
 			?>
 			<div class="profile-picture-container">
@@ -82,7 +82,7 @@ if ($searchQ !== '' || ($filterRole !== '' && in_array($filterRole, ['admin', 'u
 			</div>
 			
 			<!-- Hidden upload form -->
-			<form id="profilePictureForm" method="post" action="upload-profile-picture.php" enctype="multipart/form-data" style="display: none;">
+			<form id="profilePictureForm" method="post" action="/LoginPage/src/app/controllers/upload-profile-picture.php" enctype="multipart/form-data" style="display: none;">
 				<?php echo csrf_field(); ?>
 				<input type="file" id="profilePictureInput" name="profile_picture" accept="image/jpeg,image/png,image/gif,image/webp">
 			</form>
@@ -104,8 +104,8 @@ if ($searchQ !== '' || ($filterRole !== '' && in_array($filterRole, ['admin', 'u
 				<dd><?php echo htmlspecialchars($user['email']); ?></dd>
 			</dl>
 				<div class="link-row mt-4">
-					<a class="button" href="../../../index.php">Home</a>
-					<form method="post" action="./logout.php" style="display:inline;">
+ 				<a class="button" href="/LoginPage/index.php">Home</a>
+ 				<form method="post" action="/LoginPage/src/app/controllers/logout.php" style="display:inline;">
 						<?php echo csrf_field(); ?>
 						<button class="button" type="submit">Logout</button>
 					</form>
@@ -146,7 +146,7 @@ if ($isAdmin):
                         return http_build_query($q);
                     }
                 ?>
-                <form method="get" action="profile.php" class="mt-3" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                <form method="get" action="/LoginPage/src/app/controllers/profile.php" class="mt-3" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
                     <input type="hidden" name="page" value="1" />
                     <input type="search" name="q" placeholder="Search name, username, email" value="<?php echo htmlspecialchars($searchQ); ?>" style="flex:1; min-width:220px;" />
                     <select name="role" aria-label="Filter by role">
@@ -157,7 +157,7 @@ if ($isAdmin):
                         <?php endforeach; ?>
                     </select>
                     <button class="button" type="submit">Apply</button>
-                    <a class="button" href="profile.php">Reset</a>
+                    <a class="button" href="/LoginPage/src/app/controllers/profile.php">Reset</a>
                 </form>
                 <!--suppress CssUnresolvedCustomProperty -->
             <div class="mt-2" style="font-size: 0.95em; color: var(--muted-text);">
@@ -189,11 +189,11 @@ if ($isAdmin):
                             <?php
                             // Check if user has custom profile picture
                             if (!empty($userData['profile_picture']) && file_exists(__DIR__ . '/../../public/images/profile-pictures/' . $userData['profile_picture'])) {
-                                $userImagePath = '../../public/images/profile-pictures/' . htmlspecialchars($userData['profile_picture']);
+                                $userImagePath = '/LoginPage/src/public/images/profile-pictures/' . htmlspecialchars($userData['profile_picture']);
                             } else {
                                 // Fallback to default based on role
                                 $userProfilePic = ($userData['role'] === 'admin') ? 'admin-pfp.jpg' : 'user-pfp.jpg';
-                                $userImagePath = '../../public/images/' . $userProfilePic;
+                                $userImagePath = '/LoginPage/src/public/images/' . $userProfilePic;
                             }
                             ?>
                             <img src="<?php echo $userImagePath; ?>" alt="<?php echo htmlspecialchars($userData['name']); ?>" class="user-avatar-img">
@@ -219,19 +219,19 @@ if ($isAdmin):
                             <div class="user-actions">
                                 <?php if (($userData['id'] ?? null) !== ($user['id'] ?? null)): ?>
                                     <?php if (($userData['role'] ?? 'user') !== 'admin'): ?>
-                                    <form method="post" action="./make-admin.php" onsubmit="return confirm('Promote this user to admin?');" style="display:inline; margin-top: 0; margin-right: 8px;">
+                                    <form method="post" action="/LoginPage/src/app/controllers/make-admin.php" onsubmit="return confirm('Promote this user to admin?');" style="display:inline; margin-top: 0; margin-right: 8px;">
                                         <?php echo csrf_field(); ?>
                                         <input type="hidden" name="user_id" value="<?php echo (int)($userData['id'] ?? 0); ?>">
                                         <button class="button" type="submit">Make Admin</button>
                                     </form>
                                     <?php else: ?>
-                                    <form method="post" action="./make-user.php" onsubmit="return confirm('Demote this admin to user?');" style="display:inline; margin-top: 0; margin-right: 8px;">
+                                    <form method="post" action="/LoginPage/src/app/controllers/make-user.php" onsubmit="return confirm('Demote this admin to user?');" style="display:inline; margin-top: 0; margin-right: 8px;">
                                         <?php echo csrf_field(); ?>
                                         <input type="hidden" name="user_id" value="<?php echo (int)($userData['id'] ?? 0); ?>">
                                         <button class="button" type="submit">Make User</button>
                                     </form>
                                     <?php endif; ?>
-                                    <form method="post" action="./delete-user.php" onsubmit="return confirm('Delete this user?');" style="display:inline; margin-top: 0;">
+                                    <form method="post" action="/LoginPage/src/app/controllers/delete-user.php" onsubmit="return confirm('Delete this user?');" style="display:inline; margin-top: 0;">
                                         <?php echo csrf_field(); ?>
                                         <input type="hidden" name="user_id" value="<?php echo (int)($userData['id'] ?? 0); ?>">
                                         <button class="button" type="submit">Delete</button>
@@ -247,18 +247,18 @@ if ($isAdmin):
                         $prev = max(1, $page - 1);
                         $next = min($totalPages, $page + 1);
                     ?>
-                    <a class="button" href="profile.php?<?php echo qp(['page' => 1]); ?>" aria-label="First page">« First</a>
-                    <a class="button" href="profile.php?<?php echo qp(['page' => $prev]); ?>" aria-label="Previous page">‹ Prev</a>
+                    <a class="button" href="/LoginPage/src/app/controllers/profile.php?<?php echo qp(['page' => 1]); ?>" aria-label="First page">« First</a>
+                    <a class="button" href="/LoginPage/src/app/controllers/profile.php?<?php echo qp(['page' => $prev]); ?>" aria-label="Previous page">‹ Prev</a>
                     <?php 
                         // Windowed page numbers
                         $start = max(1, $page - 2);
                         $end = min($totalPages, $page + 2);
                         for ($i = $start; $i <= $end; $i++):
                     ?>
-                        <a class="button<?php echo $i === $page ? ' active' : ''; ?>" href="profile.php?<?php echo qp(['page' => $i]); ?>"><?php echo $i; ?></a>
+                        <a class="button<?php echo $i === $page ? ' active' : ''; ?>" href="/LoginPage/src/app/controllers/profile.php?<?php echo qp(['page' => $i]); ?>"><?php echo $i; ?></a>
                     <?php endfor; ?>
-                    <a class="button" href="profile.php?<?php echo qp(['page' => $next]); ?>" aria-label="Next page">Next ›</a>
-                    <a class="button" href="profile.php?<?php echo qp(['page' => $totalPages]); ?>" aria-label="Last page">Last »</a>
+                    <a class="button" href="/LoginPage/src/app/controllers/profile.php?<?php echo qp(['page' => $next]); ?>" aria-label="Next page">Next ›</a>
+                    <a class="button" href="/LoginPage/src/app/controllers/profile.php?<?php echo qp(['page' => $totalPages]); ?>" aria-label="Last page">Last »</a>
                 </nav>
                 <?php endif; ?>
 		</div> <!-- .card -->
@@ -266,12 +266,11 @@ if ($isAdmin):
 	<?php endif; ?>
 	<div class="demo-warning">*This is a demo version of the website</div>
     <script>
-        const CSRF_TOKEN = '<?php echo htmlspecialchars(csrf_token()); ?>';
     (function() {
         const CSRF_TOKEN = '<?php echo htmlspecialchars(csrf_token()); ?>';
         window.addEventListener('DOMContentLoaded', function(){
             if (window.Heartbeat) {
-                window.Heartbeat.installHeartbeatOnLoad({ url: '../../public/api/heartbeat.php', csrf: CSRF_TOKEN });
+                window.Heartbeat.installHeartbeatOnLoad({ url: '/LoginPage/src/public/api/heartbeat.php', csrf: CSRF_TOKEN });
             }
         });
         const root = document.documentElement;

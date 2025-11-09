@@ -24,7 +24,9 @@
     transition:
             transform 0.08s ease,
             border-color 0.2s ease,
-            box-shadow 0.2s ease;
+            box-shadow 0.2s ease,
+            background 0.2s ease,
+            color 0.2s ease;
 }
 
 .btn:hover,
@@ -34,10 +36,35 @@
     box-shadow: var(--shadow-md);
 }
 
+/* Solid primary call-to-action */
 .btn.primary,
 .btn-primary,
 .button.primary {
-    /* Inherits all styles from .btn */
+    background: linear-gradient(180deg, var(--primary-400), var(--primary-600));
+    color: #fff;
+    border-color: rgba(18, 78, 102, 0.7);
+    box-shadow:
+      0 10px 30px rgba(18, 78, 102, 0.35),
+      0 1px 0 rgba(255,255,255,0.06) inset;
+}
+.btn.primary:hover,
+.btn-primary:hover,
+.button.primary:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(180deg, var(--primary-500), var(--primary-700));
+    box-shadow:
+      0 16px 40px rgba(18, 78, 102, 0.45);
+}
+.btn.primary:active,
+.btn-primary:active,
+.button.primary:active {
+    transform: translateY(0);
+}
+.btn.primary:focus-visible,
+.btn-primary:focus-visible,
+.button.primary:focus-visible {
+    outline: 3px solid var(--ring);
+    outline-offset: 2px;
 }
 
 .btn.accent,

@@ -99,11 +99,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
 	<meta name="robots" content="noindex, nofollow">
 	<meta name="theme-color" content="#124e66">
 	<title>Login - LoginPage System</title>
-	<link rel="icon" type="image/png" sizes="32x32" href="../../public/images/logo.png">
-	<link rel="apple-touch-icon" href="../../public/images/logo.png">
-    <link rel="stylesheet" href="../../public/css/style.css?v=<?php echo time(); ?>">
-	<script src="../../public/js/toast.js" defer></script>
-	<script src="../../public/js/form-utils.js" defer></script>
+	<link rel="icon" type="image/png" sizes="32x32" href="/LoginPage/src/public/images/logo.png">
+	<link rel="apple-touch-icon" href="/LoginPage/src/public/images/logo.png">
+    <link rel="stylesheet" href="/LoginPage/src/public/css/style.css?v=<?php echo time(); ?>">
+	<script src="/LoginPage/src/public/js/toast.js" defer></script>
+	<script src="/LoginPage/src/public/js/form-utils.js" defer></script>
 </head>
 <body>
 	<?php $NAV_BASE='../../'; include __DIR__ . '/../../public/partials/navbar.php'; ?>

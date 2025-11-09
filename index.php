@@ -108,6 +108,40 @@ $NAV_BASE = "./";
 include __DIR__ . "/src/public/partials/navbar.php";
 ?>
 <div class="container page">
+    <!-- Hero Section -->
+    <div class="card glow" style="text-align:center; padding: 56px 36px; margin-bottom: 28px; position: relative; overflow: hidden;">
+        <div class="badge-pill" aria-hidden="true" style="display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; border:1px solid var(--border); background: var(--glass); font-weight:900; font-size:12px; color: var(--muted); margin: 0 auto 14px;">
+            <i class="fa-solid fa-bolt" style="color: var(--primary);"></i> Fast • Secure • Fun
+        </div>
+        <h1 class="welcome-text" style="margin-bottom: 8px;">Secure. Simple. A bit of sparkle.</h1>
+        <p style="max-width: 760px; margin: 0 auto 4px; color: var(--muted); font-size: 1.1rem;">
+            A modern authentication platform with email verification, password resets, and real-time user activity.
+            Built for performance and security—with a friendly, polished vibe.
+        </p>
+        <!-- Floating accents (decorative) -->
+        <div aria-hidden="true" style="pointer-events:none; position:absolute; inset:0;">
+            <span class="sparkle" style="position:absolute; top:8%; left:8%; width:10px; height:10px; border-radius:50%; background: radial-gradient(circle, rgba(116,141,146,0.9), rgba(116,141,146,0)); filter: blur(0.5px); opacity:0.7;"></span>
+            <span class="sparkle" style="position:absolute; bottom:14%; right:12%; width:12px; height:12px; border-radius:50%; background: radial-gradient(circle, rgba(18,78,102,0.9), rgba(18,78,102,0)); filter: blur(0.5px); opacity:0.7;"></span>
+        </div>
+    </div>
+
+    <!-- Page-specific lightweight styles -->
+    <style>
+      @media (prefers-reduced-motion: no-preference) {
+        .sparkle { animation: floatY 6s ease-in-out infinite; }
+        .sparkle:nth-child(2) { animation-duration: 8s; animation-delay: 0.6s; }
+        @keyframes floatY { 0% { transform: translateY(0); } 50% { transform: translateY(8px); } 100% { transform: translateY(0); } }
+      }
+      .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+      .feature { display:flex; gap:12px; align-items:flex-start; text-align:left; }
+      .feature .icon { width:38px; height:38px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; background: rgba(18,78,102,0.18); color:#fff; box-shadow: var(--shadow-sm); }
+      [data-theme="light"] .feature .icon { background: rgba(61,82,160,0.18); color: var(--primary-700); }
+      .feature h3 { margin:0; text-align:left; }
+      .feature p { margin:4px 0 0 0; color: var(--muted); font-size: 0.96rem; }
+      .trust-strip { display:grid; grid-auto-flow: column; gap: 10px; align-items:center; justify-content:center; text-align:center; }
+      .trust-pill { display:inline-flex; gap:8px; align-items:center; padding:8px 12px; border-radius:999px; border:1px solid var(--border); background: var(--glass); font-weight:800; font-size: 0.9rem; }
+      @media (max-width: 820px) { .features-grid { grid-template-columns: 1fr; } .trust-strip { grid-auto-flow: row; } }
+    </style>
     <div class="card">
         <?php if ($isLoggedIn): ?>
             <?php // Check if user has custom profile picture
@@ -156,14 +190,48 @@ include __DIR__ . "/src/public/partials/navbar.php";
     <!-- Info Cards Row -->
     <div class="cards-row mt-4">
         <div class="card">
-            <div class="stats-number"><?php echo number_format(
-                $todayLoginCount,
-            ); ?></div>
+            <div class="stats-number" data-target="<?php echo (int)$todayLoginCount; ?>">0</div>
             <div class="stats-label">Logins Today</div>
         </div>
         <div class="card">
             <div class="typewriter-text" id="typewriter"></div>
         </div>
+    </div>
+
+    <!-- Feature Highlights -->
+    <div class="card" style="margin-top: 10px;">
+      <div class="features-grid">
+        <div class="feature">
+          <span class="icon" aria-hidden="true"><i class="fa-solid fa-shield-halved"></i></span>
+          <div>
+            <h3>Serious security</h3>
+            <p>Email verification, rate‑limited login, CSRF protection and more—built in.</p>
+          </div>
+        </div>
+        <div class="feature">
+          <span class="icon" aria-hidden="true"><i class="fa-solid fa-bolt"></i></span>
+          <div>
+            <h3>Lightning‑fast</h3>
+            <p>Optimized SQL calls and lightweight UI so everything feels instant.</p>
+          </div>
+        </div>
+        <div class="feature">
+          <span class="icon" aria-hidden="true"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+          <div>
+            <h3>Polished & fun</h3>
+            <p>Clean, professional design with just enough personality to feel friendly.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trust / Credibility Strip -->
+    <div class="card" style="padding: 18px;">
+      <div class="trust-strip" aria-label="Highlights">
+        <span class="trust-pill"><i class="fa-solid fa-envelope-circle-check" aria-hidden="true"></i> Verified emails</span>
+        <span class="trust-pill"><i class="fa-solid fa-gauge-high" aria-hidden="true"></i> Rate‑limited logins</span>
+        <span class="trust-pill"><i class="fa-solid fa-lock" aria-hidden="true"></i> Secure sessions</span>
+      </div>
     </div>
 </div>
 <div class="demo-warning">*This is a demo version of the website</div>
@@ -277,6 +345,27 @@ include __DIR__ . "/src/public/partials/navbar.php";
             // Start the typewriter effect
             setTimeout(type, 500);
         })();
+
+        // Count-up for Logins Today
+        (function(){
+          const el = document.querySelector('.stats-number[data-target]');
+          if (!el) return;
+          const target = parseInt(el.getAttribute('data-target') || '0', 10);
+          if (!Number.isFinite(target)) return;
+          const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          if (reduce || target <= 0) { el.textContent = target.toLocaleString(); return; }
+          const duration = 900; // ms
+          const start = performance.now();
+          function tick(now){
+            const p = Math.min(1, (now - start) / duration);
+            const eased = 1 - Math.pow(1 - p, 3);
+            const val = Math.floor(eased * target);
+            el.textContent = val.toLocaleString();
+            if (p < 1) requestAnimationFrame(tick); else el.textContent = target.toLocaleString();
+          }
+          requestAnimationFrame(tick);
+        })();
+
     })();
 </script>
 </body>

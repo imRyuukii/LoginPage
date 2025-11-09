@@ -35,21 +35,21 @@ if ($role !== 'admin') {
 
 $userId = filter_input(INPUT_POST, 'user_id', FILTER_VALIDATE_INT);
 if (!$userId) {
-    header('Location: ./profile.php?error=' . urlencode('Invalid user id'));
+    header('Location: /LoginPage/src/app/controllers/profile.php?error=' . urlencode('Invalid user id'));
     exit;
 }
 
 // Do not show an error if attempting to promote yourself; just ignore and redirect
 // (UI should not render a Make Admin button for the current admin user anyway)
 if (!empty($currentUser['id']) && (int)$currentUser['id'] === (int)$userId) {
-    header('Location: ./profile.php?msg=promoted');
+    header('Location: /LoginPage/src/app/controllers/profile.php?msg=promoted');
     exit;
 }
 
 if (updateUserRole((int)$userId, 'admin')) {
-    header('Location: ./profile.php?msg=promoted');
+    header('Location: /LoginPage/src/app/controllers/profile.php?msg=promoted');
     exit;
 } else {
-    header('Location: ./profile.php?error=' . urlencode('Promote failed'));
+    header('Location: /LoginPage/src/app/controllers/profile.php?error=' . urlencode('Promote failed'));
     exit;
 }

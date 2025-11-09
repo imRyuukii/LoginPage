@@ -22,7 +22,7 @@ csrf_require_post();
 
 // Check if user is logged in
 if (!isset($_SESSION['user']['id'])) {
-    header('Location: login.php');
+    header('Location: /LoginPage/src/app/controllers/login.php');
     exit;
 }
 

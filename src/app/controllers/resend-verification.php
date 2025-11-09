@@ -63,14 +63,21 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 require_once "../services/EmailServiceSMTP.php";
                 $emailService = new EmailServiceSMTP();
 
-                // Configure real email sending
-                $emailService->enableRealEmails(
-                    "smtp.gmail.com",
-                    587,
-                    "YOUR_GMAIL@gmail.com", // Your Gmail
-                    "YOUR_APP_PASSWORD_HERE", // 16-char app password
-                    "noreply@yoursite.com", // From email
-                );
+                // Configure real email sending from environment variables if available
+                $smtpHost = getenv('SMTP_HOST') ?: null;
+                $smtpPort = getenv('SMTP_PORT') ?: null;
+                $smtpUser = getenv('SMTP_USERNAME') ?: null;
+                $smtpPass = getenv('SMTP_PASSWORD') ?: null;
+                $smtpFrom = getenv('SMTP_FROM_EMAIL') ?: null;
+                if ($smtpHost && $smtpPort && $smtpUser && $smtpPass && $smtpFrom) {
+                    $emailService->enableRealEmails(
+                        $smtpHost,
+                        (int)$smtpPort,
+                        $smtpUser,
+                        $smtpPass,
+                        $smtpFrom
+                    );
+                }
 
                 $emailSent = $emailService->sendVerificationEmail(
                     $email,

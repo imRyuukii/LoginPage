@@ -34,20 +34,20 @@ if ($role !== 'admin') {
 
 $userId = filter_input(INPUT_POST, 'user_id', FILTER_VALIDATE_INT);
 if (!$userId) {
-    header('Location: ./profile.php?error=' . urlencode('Invalid user id'));
+    header('Location: /LoginPage/src/app/controllers/profile.php?error=' . urlencode('Invalid user id'));
     exit;
 }
 
 // Prevent deleting yourself
 if (!empty($currentUser['id']) && (int)$currentUser['id'] === (int)$userId) {
-    header('Location: ./profile.php?error=' . urlencode("You can't delete your own account"));
+    header('Location: /LoginPage/src/app/controllers/profile.php?error=' . urlencode("You can't delete your own account"));
     exit;
 }
 
 if (deleteUser((int)$userId)) {
-    header('Location: ./profile.php?msg=deleted');
+    header('Location: /LoginPage/src/app/controllers/profile.php?msg=deleted');
     exit;
 } else {
-    header('Location: ./profile.php?error=' . urlencode('Delete failed'));
+    header('Location: /LoginPage/src/app/controllers/profile.php?error=' . urlencode('Delete failed'));
     exit;
 }

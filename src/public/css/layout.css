@@ -4,6 +4,10 @@
 body {
     min-height: 100vh;
     background: var(--bg);
+    background-image: var(--grad-hero);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-size: cover;
     color: var(--text);
     font-family:
             ui-sans-serif,
@@ -23,6 +27,13 @@ body {
     grid-template-rows: auto 1fr auto;
     gap: 26px;
     padding: 76px 20px 60px;
+}
+
+/* Prevent navbar overlap on mobile by increasing top padding */
+@media (max-width: 820px) {
+  body {
+    padding-top: calc(96px + env(safe-area-inset-top, 0px));
+  }
 }
 
 [data-theme="light"] body {
