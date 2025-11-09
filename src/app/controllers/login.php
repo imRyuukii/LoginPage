@@ -48,6 +48,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
             updateLastActive($user["id"]);
             updateUserActivity($user["id"]);
 
+            // Record successful login event (non-blocking)
+            recordLoginEvent(
+                (int)$user["id"],
+                $_SERVER['REMOTE_ADDR'] ?? null,
+                $_SERVER['HTTP_USER_AGENT'] ?? null
+            );
+
             // Regenerate session ID on login to prevent fixation
             session_regenerate_id(true);
             $_SESSION["user"] = [
@@ -99,9 +106,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
 	<script src="../../public/js/form-utils.js" defer></script>
 </head>
 <body>
-	<button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"></button>
-	<img src="../../public/images/logo.png" alt="Logo" class="logo-website-top-left">
-	<div class="logo-shadow"></div>
+	<?php $NAV_BASE='../../'; include __DIR__ . '/../../public/partials/navbar.php'; ?>
 	<div class="container page">
 		<div class="card">
 			<h1>Login</h1>

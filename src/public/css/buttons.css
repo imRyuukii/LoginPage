@@ -1,0 +1,100 @@
+/* =========================
+   Buttons & CTA
+   ========================= */
+.btn,
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 18px;
+    margin: 8px 0;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: linear-gradient(
+            180deg,
+            var(--glass),
+            rgba(255, 255, 255, 0.02)
+    );
+    color: var(--text);
+    font-weight: 900;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: var(--shadow-sm);
+    transition:
+            transform 0.08s ease,
+            border-color 0.2s ease,
+            box-shadow 0.2s ease;
+}
+
+.btn:hover,
+.button:hover {
+    transform: translateY(-1px);
+    border-color: var(--accent);
+    box-shadow: var(--shadow-md);
+}
+
+.btn.primary,
+.btn-primary,
+.button.primary {
+    /* Inherits all styles from .btn */
+}
+
+.btn.accent,
+.btn-accent {
+    border-color: rgba(6, 182, 212, 0.48);
+    background: linear-gradient(
+            180deg,
+            rgba(6, 182, 212, 0.28),
+            rgba(6, 182, 212, 0.1)
+    );
+}
+
+.btn.danger,
+.btn-danger {
+    border-color: rgba(239, 68, 68, 0.48);
+    background: linear-gradient(
+            180deg,
+            rgba(239, 68, 68, 0.26),
+            rgba(239, 68, 68, 0.1)
+    );
+}
+
+.btn.ghost,
+.btn-outline {
+    background: transparent;
+}
+
+.btn.block {
+    width: 100%;
+}
+
+.cta,
+.cta-group {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.button-loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--text);
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

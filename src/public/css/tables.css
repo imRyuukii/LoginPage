@@ -1,0 +1,39 @@
+
+/* =========================
+   Tables
+   ========================= */
+.table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    background: var(--surface);
+    overflow: hidden;
+}
+
+.table th,
+.table td {
+    padding: 12px 14px;
+    text-align: left;
+    font-size: var(--fs-sm);
+}
+
+.table thead th {
+    background: var(--surface-2);
+    color: var(--muted);
+    font-weight: 900;
+    border-bottom: 1px solid var(--border);
+}
+
+.table tbody tr + tr td {
+    border-top: 1px solid var(--border);
+}
+
+.table tr:hover td {
+    background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.03),
+            rgba(255, 255, 255, 0.01)
+    );
+}

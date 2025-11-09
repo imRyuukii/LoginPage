@@ -634,3 +634,29 @@ function getLastActiveFormatted($lastActive, $lastActivity = null): string
     }
     return "Just now";
 }
+
+
+// =========================
+// Login events tracking
+// =========================
+/**
+ * Record a successful login event for analytics.
+ */
+function recordLoginEvent(int $userId, ?string $ip = null, ?string $userAgent = null): bool
+{
+    try {
+        global $db;
+        // Normalize lengths
+        $ip = $ip !== null ? substr($ip, 0, 45) : null;
+        $userAgent = $userAgent !== null ? substr($userAgent, 0, 255) : null;
+        $db->query(
+            "INSERT INTO login_events (user_id, ip_address, user_agent) VALUES (?, ?, ?)",
+            [$userId, $ip, $userAgent]
+        );
+        return true;
+    } catch (Exception $e) {
+        // If table doesn't exist or any other failure, log and continue (should not block login)
+        error_log("recordLoginEvent failed: " . $e->getMessage());
+        return false;
+    }
+}

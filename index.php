@@ -1,5 +1,6 @@
 <?php
 // Harden session cookie and start session
+global $db;
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_set_cookie_params([
         "lifetime" => 0,
@@ -14,13 +15,15 @@ session_start();
 require_once "./src/app/models/user-functions-db.php";
 require_once "./src/app/security/csrf.php";
 csrf_ensure_initialized();
+require_once "./src/config/database.php";
 $isLoggedIn = isset($_SESSION["user"]);
 
 // If logged in, fetch fresh user data to get updated profile picture
 if ($isLoggedIn) {
-    require_once "./src/config/database.php";
     try {
-        $stmt = $db->query('SELECT * FROM users WHERE id = ?', [$_SESSION["user"]["id"]]);
+        $stmt = $db->query("SELECT * FROM users WHERE id = ?", [
+            $_SESSION["user"]["id"],
+        ]);
         $dbUser = $stmt->fetch();
         if ($dbUser) {
             // Update session with fresh data
@@ -28,86 +31,143 @@ if ($isLoggedIn) {
         }
     } catch (Exception $e) {
         // If database fetch fails, continue with session data
-        error_log('Failed to fetch user data: ' . $e->getMessage());
+        error_log("Failed to fetch user data: " . $e->getMessage());
+    }
+}
+
+// Get today's login count
+$todayLoginCount = 0;
+if (!isset($db)) {
+    require_once "./src/config/database.php";
+}
+try {
+    // Count successful login events from today (UTC, based on login_events table)
+    $stmt = $db->query(
+        "SELECT COUNT(*) AS count
+         FROM login_events
+         WHERE created_at >= CURDATE() AND created_at < (CURDATE() + INTERVAL 1 DAY)",
+    );
+    $result = $stmt->fetch();
+    $todayLoginCount = (int) ($result["count"] ?? 0);
+} catch (Exception $e) {
+    error_log(
+        "Failed to fetch today login count from login_events: " .
+            $e->getMessage(),
+    );
+    // Fallback: try to approximate using users' last_activity updated today (may include non-login activity)
+    try {
+        $stmt = $db->query(
+            "SELECT COUNT(*) AS count
+             FROM users
+             WHERE last_activity >= CURDATE() AND last_activity < (CURDATE() + INTERVAL 1 DAY)",
+        );
+        $result = $stmt->fetch();
+        $todayLoginCount = (int) ($result["count"] ?? 0);
+    } catch (Exception $e2) {
+        error_log("Fallback login count query failed: " . $e2->getMessage());
+        $todayLoginCount = 0;
     }
 }
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta name="description" content="Secure authentication system with email verification, password reset, and real-time user management. Professional login and registration platform.">
-	<meta name="keywords" content="login, authentication, registration, secure login, email verification, password reset, user management">
-	<meta name="author" content="LoginPage System">
-	<meta name="theme-color" content="#124e66">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Secure authentication system with email verification, password reset, and real-time user management. Professional login and registration platform.">
+    <meta name="keywords" content="login, authentication, registration, secure login, email verification, password reset, user management">
+    <meta name="author" content="LoginPage System">
+    <meta name="theme-color" content="#124e66">
 
-	<!-- Open Graph / Facebook -->
-	<meta property="og:type" content="website">
-	<meta property="og:title" content="LoginPage - Secure Authentication System">
-	<meta property="og:description" content="Professional authentication platform with email verification and user management">
-	<meta property="og:image" content="./src/public/images/logo.png">
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="LoginPage - Secure Authentication System">
+    <meta property="og:description" content="Professional authentication platform with email verification and user management">
+    <meta property="og:image" content="./src/public/images/logo.png">
 
-	<!-- Twitter -->
-	<meta name="twitter:card" content="summary">
-	<meta name="twitter:title" content="LoginPage - Secure Authentication System">
-	<meta name="twitter:description" content="Professional authentication platform with email verification and user management">
-	<meta name="twitter:image" content="./src/public/images/logo.png">
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="LoginPage - Secure Authentication System">
+    <meta name="twitter:description" content="Professional authentication platform with email verification and user management">
+    <meta name="twitter:image" content="./src/public/images/logo.png">
 
-	<title>LoginPage - Secure Authentication System</title>
+    <title>LoginPage - Secure Authentication System</title>
 
-	<!-- Favicons -->
-	<link rel="icon" type="image/png" sizes="32x32" href="./src/public/images/logo.png">
-	<link rel="apple-touch-icon" href="./src/public/images/logo.png">
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="./src/public/images/logo.png">
+    <link rel="apple-touch-icon" href="./src/public/images/logo.png">
 
     <link rel="stylesheet" href="src/public/css/style.css?v=<?php echo time(); ?>">
-	<script src="./src/public/js/heartbeat.js" defer></script>
-	<script src="./src/public/js/toast.js" defer></script>
-	<script src="./src/public/js/form-utils.js" defer></script>
+    <script src="./src/public/js/heartbeat.js" defer></script>
+    <script src="./src/public/js/toast.js" defer></script>
+    <script src="./src/public/js/form-utils.js" defer></script>
 </head>
 <body>
-	<button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"></button>
-	<img src="./src/public/images/logo.png" alt="Logo" class="logo-website-top-left">
-    <div class="logo-shadow"></div>
-	<div class="container page">
-		<div class="card">
-			<?php if ($isLoggedIn): ?>
-				<?php
-    // Check if user has custom profile picture
-    if (!empty($_SESSION["user"]["profile_picture"]) && file_exists('./src/public/images/profile-pictures/' . $_SESSION["user"]["profile_picture"])) {
-        $imagePath = './src/public/images/profile-pictures/' . htmlspecialchars($_SESSION["user"]["profile_picture"]);
-    } else {
-        // Fallback to default based on role
-        $userRole = $_SESSION["user"]["role"] ?? ($_SESSION["user"]["login"] === "admin" ? "admin" : "user");
-        $profilePic = $userRole === "admin" ? "admin-pfp.jpg" : "user-pfp.jpg";
-        $imagePath = "./src/public/images/" . $profilePic;
-    }
-    ?>
-				<img src="<?php echo $imagePath; ?>" alt="Profile Picture" class="profile-picture">
-			<?php endif; ?>
-			<h1 class="welcome-text">WELCOME</h1>
-			<?php if ($isLoggedIn): ?>
-				<p>Logged in as: <strong><?php echo htmlspecialchars(
-        $_SESSION["user"]["login"],
-    ); ?></strong></p>
-				<div class="link-row mt-3">
-					<a class="button" href="./src/app/controllers/profile.php">Go to profile</a>
-					<form method="post" action="./src/app/controllers/logout.php" style="display:inline;">
-						<?php echo csrf_field(); ?>
-						<button class="button" type="submit">Logout</button>
-					</form>
-				</div>
-			<?php else: ?>
-				<p>You are not logged in. Please log in to use our website.</p>
-				<p class="link-row mt-3">
-					<a class="button primary" href="./src/app/controllers/login.php">Login</a>
-				</p>
-			<?php endif; ?>
-			<p class="footer mt-6">Demo auth flow with in-memory users.</p>
-		</div>
-	</div>
-	<div class="demo-warning">*This is a demo version of the website</div>
-    <script>
+<?php
+$NAV_BASE = "./";
+include __DIR__ . "/src/public/partials/navbar.php";
+?>
+<div class="container page">
+    <div class="card">
+        <?php if ($isLoggedIn): ?>
+            <?php // Check if user has custom profile picture
+            if (
+                !empty($_SESSION["user"]["profile_picture"]) &&
+                file_exists(
+                    "./src/public/images/profile-pictures/" .
+                        $_SESSION["user"]["profile_picture"],
+                )
+            ) {
+                $imagePath =
+                    "./src/public/images/profile-pictures/" .
+                    htmlspecialchars($_SESSION["user"]["profile_picture"]);
+            } else {
+                // Fallback to default based on role
+                $userRole =
+                    $_SESSION["user"]["role"] ??
+                    ($_SESSION["user"]["login"] === "admin" ? "admin" : "user");
+                $profilePic =
+                    $userRole === "admin" ? "admin-pfp.jpg" : "user-pfp.jpg";
+                $imagePath = "./src/public/images/" . $profilePic;
+            } ?>
+            <img src="<?php echo $imagePath; ?>" alt="Profile Picture" class="profile-picture">
+        <?php endif; ?>
+        <h1 class="welcome-text">WELCOME</h1>
+        <?php if ($isLoggedIn): ?>
+            <p>Logged in as: <strong><?php echo htmlspecialchars(
+                $_SESSION["user"]["login"],
+            ); ?></strong></p>
+            <div class="link-row mt-3">
+                <a class="button" href="./src/app/controllers/profile.php">Go to profile</a>
+                <form method="post" action="./src/app/controllers/logout.php" style="display:inline;">
+                    <?php echo csrf_field(); ?>
+                    <button class="button" type="submit">Logout</button>
+                </form>
+            </div>
+        <?php else: ?>
+            <p>You are not logged in. Please log in to use our website.</p>
+            <p class="link-row mt-3">
+                <a class="button primary" href="./src/app/controllers/login.php">Login</a>
+            </p>
+        <?php endif; ?>
+        <p class="footer mt-6">Demo auth flow with in-memory users.</p>
+    </div>
+
+    <!-- Info Cards Row -->
+    <div class="cards-row mt-4">
+        <div class="card">
+            <div class="stats-number"><?php echo number_format(
+                $todayLoginCount,
+            ); ?></div>
+            <div class="stats-label">Logins Today</div>
+        </div>
+        <div class="card">
+            <div class="typewriter-text" id="typewriter"></div>
+        </div>
+    </div>
+</div>
+<div class="demo-warning">*This is a demo version of the website</div>
+<script>
     (function() {
         const CSRF_TOKEN = '<?php echo htmlspecialchars(csrf_token()); ?>';
         const IS_LOGGED_IN = <?php echo $isLoggedIn ? "true" : "false"; ?>;
@@ -168,7 +228,56 @@ if ($isLoggedIn) {
                 start();
             })();
         }
+
+        // Typewriter Effect
+        (function() {
+            const messages = [
+                "Try Logging in.",
+                "Share Your Thoughts.",
+                "Making an account is really simple."
+            ];
+            const typewriterElement = document.getElementById('typewriter');
+            let messageIndex = 0;
+            let charIndex = 0;
+            let isDeleting = false;
+            let typingSpeed = 100;
+            const deletingSpeed = 50;
+            const pauseBeforeDelete = 2000;
+            const pauseBeforeNext = 500;
+
+            function type() {
+                const currentMessage = messages[messageIndex];
+
+                if (isDeleting) {
+                    // Remove characters
+                    typewriterElement.textContent = currentMessage.substring(0, charIndex - 1);
+                    charIndex--;
+
+                    if (charIndex === 0) {
+                        isDeleting = false;
+                        messageIndex = (messageIndex + 1) % messages.length;
+                        setTimeout(type, pauseBeforeNext);
+                        return;
+                    }
+                    setTimeout(type, deletingSpeed);
+                } else {
+                    // Add characters
+                    typewriterElement.textContent = currentMessage.substring(0, charIndex + 1);
+                    charIndex++;
+
+                    if (charIndex === currentMessage.length) {
+                        isDeleting = true;
+                        setTimeout(type, pauseBeforeDelete);
+                        return;
+                    }
+                    setTimeout(type, typingSpeed);
+                }
+            }
+
+            // Start the typewriter effect
+            setTimeout(type, 500);
+        })();
     })();
-    </script>
+</script>
 </body>
 </html>

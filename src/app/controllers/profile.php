@@ -1,5 +1,6 @@
 <?php
 // Harden session cookie and start session
+global $db;
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_set_cookie_params([
         'lifetime' => 0,
@@ -59,9 +60,7 @@ if ($searchQ !== '' || ($filterRole !== '' && in_array($filterRole, ['admin', 'u
 	<script src="../../public/js/heartbeat.js" defer></script>
 </head>
 <body>
-	<button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"></button>
-	<img src="../../public/images/logo.png" alt="Logo" class="logo-website-top-left">
-    <div class="logo-shadow"></div>
+	<?php $NAV_BASE='../../'; include __DIR__ . '/../../public/partials/navbar.php'; ?>
 	<div class="container page">
 		<div class="card">
 			<?php 
@@ -160,7 +159,8 @@ if ($isAdmin):
                     <button class="button" type="submit">Apply</button>
                     <a class="button" href="profile.php">Reset</a>
                 </form>
-                <div class="mt-2" style="font-size: 0.95em; color: var(--muted-text);">
+                <!--suppress CssUnresolvedCustomProperty -->
+            <div class="mt-2" style="font-size: 0.95em; color: var(--muted-text);">
                     <?php 
                         $showingStart = $total ? ($offset + 1) : 0; 
                         $showingEnd = min($offset + $perPage, $total);

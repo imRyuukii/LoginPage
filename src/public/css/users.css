@@ -1,0 +1,164 @@
+
+/* =========================
+   Users List & Avatars
+   ========================= */
+.users-list {
+    display: grid;
+    grid-auto-rows: minmax(min-content, auto);
+    row-gap: 16px;
+    margin-top: 18px;
+}
+
+.user-item {
+    background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.08),
+            rgba(255, 255, 255, 0.02)
+    );
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
+    margin-top: 16px;
+}
+
+.user-item:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.user-avatar {
+    top: -5px;
+    position: relative;
+    flex-shrink: 0;
+    overflow: visible;
+}
+
+.user-avatar-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    object-fit: cover;
+    position: relative;
+    z-index: 1;
+}
+
+.online-dot {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--success);
+    border: 2px solid var(--border);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    transform: scale(0.8);
+    transition:
+            opacity 0.15s ease,
+            transform 0.15s ease;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.user-avatar.online .online-dot {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.user-avatar.online::after {
+    content: "";
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--success);
+    border: 2px solid var(--border);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
+    z-index: 2;
+    pointer-events: none;
+}
+
+.user-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: 6px;
+    min-width: 0;
+}
+
+.user-name {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.user-name h3 {
+    margin: 0 0 2px 0;
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--text);
+    line-height: 1.2;
+}
+
+.user-login {
+    margin: 0;
+    font-size: 14px;
+    color: var(--primary-400);
+    font-weight: 800;
+}
+
+.user-email {
+    display: flex;
+    align-items: center;
+    margin-left: 12px;
+}
+
+.user-email p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--muted);
+}
+
+.user-last-active {
+    text-align: right;
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+
+.last-active-label {
+    font-size: 0.78em;
+    color: var(--muted);
+    margin: 0 0 2px 0;
+    font-weight: 800;
+}
+
+.last-active-time {
+    font-size: 0.94em;
+    font-weight: 1000;
+    margin: 0;
+    color: var(--text);
+}
+
+.user-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    margin-left: 12px;
+}
+
+.user-actions .button {
+    margin: 0;
+    white-space: nowrap;
+}

@@ -1,6 +1,7 @@
 <?php
 // src/app/controllers/upload-profile-picture.php
 
+global $db;
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_set_cookie_params([
         'lifetime' => 0,

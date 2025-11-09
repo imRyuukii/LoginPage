@@ -1,0 +1,76 @@
+
+/* =========================
+   CSS Reset & Base Styles
+   ========================= */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+html,
+body {
+    height: 100%;
+}
+html:focus-within {
+    scroll-behavior: smooth;
+}
+html {
+    min-height: 100%;
+    background-color: var(--bg);
+}
+html[data-theme="light"] {
+    background-color: var(--bg);
+}
+body {
+    margin: 0;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+img,
+svg,
+video,
+canvas,
+iframe {
+    display: block;
+    max-width: 100%;
+}
+input,
+button,
+textarea,
+select {
+    font: inherit;
+    color: inherit;
+}
+button {
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+}
+button,
+input[type="submit"],
+input[type="button"] {
+    all: unset;
+}
+ul,
+ol {
+    margin: 0;
+    padding: 0;
+}
+a {
+    text-decoration: none;
+    color: inherit;
+}
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

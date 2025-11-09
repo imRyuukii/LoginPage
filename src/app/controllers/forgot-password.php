@@ -101,9 +101,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
     <link rel="stylesheet" href="../../public/css/style.css?v=<?php echo time(); ?>">
 </head>
 <body>
-    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"></button>
-    <img src="../../public/images/logo.png" alt="Logo" class="logo-website-top-left">
-    <div class="logo-shadow"></div>
+    <?php $NAV_BASE='../../'; include __DIR__ . '/../../public/partials/navbar.php'; ?>
     <div class="container page">
         <div class="card">
             <h1>🔐 Forgot Password</h1>

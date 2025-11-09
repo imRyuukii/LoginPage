@@ -1,6 +1,7 @@
 <?php
 // scripts/health.php
 // Read-only health check: outputs JSON with DB status and app state.
+global $db;
 header('Content-Type: application/json');
 
 $result = [

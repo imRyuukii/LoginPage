@@ -1,0 +1,184 @@
+
+/* =========================
+   Forms & Inputs
+   ========================= */
+form {
+    margin-top: 8px;
+}
+
+label {
+    display: block;
+    margin: 12px 0 6px 0;
+    color: var(--muted);
+    font-weight: 900;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="search"],
+textarea,
+select {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    outline: 0;
+    transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease,
+            background 0.2s ease;
+}
+
+[data-theme="light"] input[type="text"],
+[data-theme="light"] input[type="password"],
+[data-theme="light"] input[type="email"],
+[data-theme="light"] input[type="search"],
+[data-theme="light"] textarea,
+[data-theme="light"] select {
+    background: transparent;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--glass);
+}
+
+select option {
+    background: transparent;
+    color: var(--text);
+    background-color: var(--bg);
+    border-radius: 10px;
+}
+
+.field-note {
+    font-size: var(--fs-sm);
+    color: var(--muted);
+    margin-top: 6px;
+}
+
+.field-error {
+    font-size: var(--fs-sm);
+    color: var(--danger);
+    background: rgba(212, 116, 116, 0.12);
+    border: 1px solid var(--danger);
+    padding: 8px 10px;
+    border-radius: 10px;
+    margin-top: 8px;
+}
+
+.form-row {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: 1fr 1fr;
+}
+
+.form-row .full {
+    grid-column: 1 / -1;
+}
+
+/* Form Validation */
+.validation-feedback {
+    font-size: 13px;
+    margin-top: 6px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.validation-valid {
+    color: var(--success);
+    background: rgba(74, 157, 126, 0.12);
+    border: 1px solid var(--success);
+}
+
+.validation-invalid {
+    color: var(--danger);
+    background: rgba(212, 116, 116, 0.12);
+    border: 1px solid var(--danger);
+}
+
+.input-valid {
+    border-color: var(--success) !important;
+}
+
+.input-invalid {
+    border-color: var(--danger) !important;
+}
+
+/* Password Strength */
+.password-strength-indicator {
+    margin-top: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    animation: slideDown 0.2s ease;
+}
+
+.strength-bar {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.strength-bar-fill {
+    height: 100%;
+    transition:
+            width 0.3s ease,
+            background 0.3s ease;
+    border-radius: 3px;
+}
+
+.strength-weak .strength-bar-fill {
+    background: var(--danger);
+    width: 20%;
+}
+
+.strength-medium .strength-bar-fill {
+    background: var(--warning);
+    width: 60%;
+}
+
+.strength-strong .strength-bar-fill {
+    background: var(--success);
+    width: 100%;
+}
+
+.strength-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.strength-strong .strength-text {
+    color: var(--success);
+}
+
+.strength-medium .strength-text {
+    color: var(--warning);
+}
+
+.strength-weak .strength-text {
+    color: var(--danger);
+}
