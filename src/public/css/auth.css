@@ -1,0 +1,98 @@
+/* =========================
+   Auth pages polish
+   ========================= */
+
+.auth-card {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative corner glow */
+.auth-card::after {
+  content: "";
+  position: absolute;
+  right: -80px;
+  top: -80px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(18,78,102,0.32), transparent 60%);
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+.auth-title {
+  margin: 0 0 6px 0;
+  font-size: var(--fs-h1);
+  letter-spacing: 0.2px;
+}
+
+.auth-subtitle {
+  margin: 0 0 16px 0;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* Input adornments */
+.input-wrap {
+  position: relative;
+}
+.input-wrap input {
+  padding-right: 44px; /* space for action button */
+}
+.input-action {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--glass);
+  color: var(--text);
+  cursor: pointer;
+}
+.input-action:hover { border-color: var(--accent); }
+.input-action:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Actions row */
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* Side tips for auth pages */
+.auth-tips {
+  margin-top: 18px;
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--glass);
+}
+.auth-tips .tip {
+  display: inline-flex; align-items: center; gap: 8px; color: var(--muted);
+}
+
+@media (min-width: 900px) {
+  .auth-layout {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 18px;
+    align-items: start;
+  }
+  .auth-side {
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    padding: 24px;
+    background: linear-gradient(180deg, rgba(211,217,212,0.05), rgba(211,217,212,0.02));
+  }
+  .auth-side h3 { margin: 0 0 10px 0; }
+}

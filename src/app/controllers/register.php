@@ -13,9 +13,12 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 session_start();
 require_once "../models/user-functions-db.php";
 require_once "../security/csrf.php";
+require_once __DIR__ . "/../security/headers.php";
 require_once "../services/EmailService.php";
 require_once __DIR__ . "/../services/RateLimiter.php";
 csrf_ensure_initialized();
+apply_default_security_headers();
+apply_sensitive_nocache();
 
 $error = "";
 $success = "";
@@ -119,15 +122,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
     <title>Register - LoginPage System</title>
     <link rel="icon" type="image/png" sizes="32x32" href="../../public/images/logo.png">
     <link rel="apple-touch-icon" href="../../public/images/logo.png">
-    <link rel="stylesheet" href="../../public/css/style.css?v=<?php echo time(); ?>">
-    <script src="../../public/js/toast.js" defer></script>
-    <script src="../../public/js/form-utils.js" defer></script>
+    <link rel="stylesheet" href="../../public/css/style.css?v=<?php echo filemtime(__DIR__ . "/../../public/css/style.css"); ?>">
+    <script src="../../public/js/toast.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/toast.js"); ?>" defer></script>
+    <script src="../../public/js/form-utils.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/form-utils.js"); ?>" defer></script>
 </head>
 <body>
     <?php $NAV_BASE='../../'; include __DIR__ . '/../../public/partials/navbar.php'; ?>
     <div class="container page">
-        <div class="card">
-            <h1>Register</h1>
+        <div class="card auth-card">
+            <h1 class="auth-title">Create your account</h1>
+            <p class="auth-subtitle">Join in a minute — verify email to sign in</p>
             <?php if (!empty($error)): ?>
                 <p class="alert error mt-3"><?php echo htmlspecialchars(
                     $error,
@@ -138,41 +142,65 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
                     $success,
                 ); ?></p>
             <?php endif; ?>
-            <form method="post" action="">
-                <?php echo csrf_field(); ?>
-                <label for="username">Username</label>
-                <input type="text" id="username" name="username" required value="<?php echo htmlspecialchars(
-                    $_POST["username"] ?? "",
-                ); ?>">
+            <div class="auth-layout">
+              <div>
+                <form method="post" action="">
+                    <?php echo csrf_field(); ?>
+                    <label for="username">Username</label>
+                    <div class="input-wrap">
+                      <input type="text" id="username" name="username" required value="<?php echo htmlspecialchars(
+                        $_POST["username"] ?? "",
+                      ); ?>">
+                    </div>
 
-                <label for="name">Full Name</label>
-                <input type="text" id="name" name="name" required value="<?php echo htmlspecialchars(
-                    $_POST["name"] ?? "",
-                ); ?>">
+                    <label for="name">Full Name</label>
+                    <div class="input-wrap">
+                      <input type="text" id="name" name="name" required value="<?php echo htmlspecialchars(
+                        $_POST["name"] ?? "",
+                      ); ?>">
+                    </div>
 
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" required value="<?php echo htmlspecialchars(
-                    $_POST["email"] ?? "",
-                ); ?>">
+                    <label for="email">Email</label>
+                    <div class="input-wrap">
+                      <input type="email" id="email" name="email" required value="<?php echo htmlspecialchars(
+                        $_POST["email"] ?? "",
+                      ); ?>">
+                    </div>
 
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
+                    <label for="password">Password</label>
+                    <div class="input-wrap">
+                      <input type="password" id="password" name="password" required>
+                      <button type="button" class="input-action" id="togglePasswordReg" aria-label="Show password"><i class="fa-solid fa-eye"></i></button>
+                    </div>
 
-                <label for="confirm_password">Confirm Password</label>
-                <input type="password" id="confirm_password" name="confirm_password" required>
+                    <label for="confirm_password">Confirm Password</label>
+                    <div class="input-wrap">
+                      <input type="password" id="confirm_password" name="confirm_password" required>
+                      <button type="button" class="input-action" id="toggleConfirmReg" aria-label="Show password"><i class="fa-solid fa-eye"></i></button>
+                    </div>
 
-                <div class="link-row centered mt-4">
-                    <button class="button primary" type="submit">Register</button>
-                    <a class="button" href="./login.php">Back to Login</a>
+                    <div class="form-actions mt-4">
+                        <button class="button primary" type="submit">Register</button>
+                        <a class="button" href="./login.php">Back to Login</a>
+                    </div>
+                </form>
+                <div class="mt-6">
+                    <div class="alert info" style="background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.25); color: var(--text);">
+                        <strong>📧 Email Verification Required</strong><br>
+                        After registration, you'll receive a verification email. You must click the verification link before you can log in.
+                    </div>
                 </div>
-            </form>
-            <div class="mt-6">
-                <div class="alert info" style="background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.25); color: var(--text);">
-                    <strong>📧 Email Verification Required</strong><br>
-                    After registration, you'll receive a verification email. You must click the verification link before you can log in.
+                <p class="footer mt-6">Already have an account? <a href="./login.php">Login here</a></p>
+              </div>
+              <div class="auth-side">
+                <h3><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Quick tips</h3>
+                <div class="auth-tips">
+                  <div class="tip"><i class="fa-solid fa-key" aria-hidden="true"></i> Use 8+ chars with upper/lowercase and a number</div>
+                  <div class="tip"><i class="fa-solid fa-envelope" aria-hidden="true"></i> Check spam for the verification email</div>
+                  <div class="tip"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> You must verify email before login</div>
                 </div>
+              </div>
             </div>
-            <p class="footer mt-6">Already have an account? <a href="./login.php">Login here</a></p>
         </div>
     </div>
     <div class="demo-warning">*This is a demo version of the website</div>
@@ -262,6 +290,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
         // Prevent double submission
         if (form) {
             FormUtils.preventDoubleSubmit(form);
+        }
+
+        // Password show/hide toggles
+        var t1 = document.getElementById('togglePasswordReg');
+        var p1 = document.getElementById('password');
+        if (t1 && p1) {
+            t1.addEventListener('click', function(){
+                var isPwd = p1.getAttribute('type') === 'password';
+                p1.setAttribute('type', isPwd ? 'text' : 'password');
+                t1.innerHTML = isPwd ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+                t1.setAttribute('aria-label', isPwd ? 'Hide password' : 'Show password');
+            });
+        }
+        var t2 = document.getElementById('toggleConfirmReg');
+        var p2 = document.getElementById('confirm_password');
+        if (t2 && p2) {
+            t2.addEventListener('click', function(){
+                var isPwd = p2.getAttribute('type') === 'password';
+                p2.setAttribute('type', isPwd ? 'text' : 'password');
+                t2.innerHTML = isPwd ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+                t2.setAttribute('aria-label', isPwd ? 'Hide password' : 'Show password');
+            });
         }
     });
     </script>

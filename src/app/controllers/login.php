@@ -13,8 +13,11 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 session_start();
 require_once "../models/user-functions-db.php";
 require_once "../security/csrf.php";
+require_once __DIR__ . "/../security/headers.php";
 require_once __DIR__ . "/../services/RateLimiter.php"; // NEW: Rate limiting
 csrf_ensure_initialized();
+apply_default_security_headers();
+apply_sensitive_nocache();
 
 $error = "";
 $rateLimiter = new RateLimiter();
@@ -101,50 +104,69 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
 	<title>Login - LoginPage System</title>
 	<link rel="icon" type="image/png" sizes="32x32" href="/LoginPage/src/public/images/logo.png">
 	<link rel="apple-touch-icon" href="/LoginPage/src/public/images/logo.png">
-    <link rel="stylesheet" href="/LoginPage/src/public/css/style.css?v=<?php echo time(); ?>">
-	<script src="/LoginPage/src/public/js/toast.js" defer></script>
-	<script src="/LoginPage/src/public/js/form-utils.js" defer></script>
+    <link rel="stylesheet" href="/LoginPage/src/public/css/style.css?v=<?php echo filemtime(__DIR__ . "/../../public/css/style.css"); ?>">
+	<script src="/LoginPage/src/public/js/toast.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/toast.js"); ?>" defer></script>
+	<script src="/LoginPage/src/public/js/form-utils.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/form-utils.js"); ?>" defer></script>
 </head>
 <body>
 	<?php $NAV_BASE='../../'; include __DIR__ . '/../../public/partials/navbar.php'; ?>
 	<div class="container page">
-		<div class="card">
-			<h1>Login</h1>
+		<div class="card auth-card">
+			<h1 class="auth-title">Welcome back</h1>
+			<p class="auth-subtitle">Log in to your account to continue</p>
 			<?php if (!empty($error)): ?>
 				<p class="alert error mt-3"><?php echo htmlspecialchars($error); ?></p>
 			<?php endif; ?>
-			<form method="post" action="" id="loginForm">
-				<?php echo csrf_field(); ?>
-				<label for="login">Username or Email</label>
-				<input type="text" id="login" name="login" required autocomplete="username" placeholder="Enter your username or email" <?php echo $rateLimiter->isBlocked(
+
+			<div class="auth-layout">
+				<div>
+					<form method="post" action="" id="loginForm">
+						<?php echo csrf_field(); ?>
+						<label for="login">Username or Email</label>
+						<div class="input-wrap">
+							<input type="text" id="login" name="login" required autocomplete="username" placeholder="Enter your username or email" <?php echo $rateLimiter->isBlocked(
         "login",
     )
         ? "disabled"
         : ""; ?>>
+						</div>
 
-				<label for="password">Password</label>
-				<input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Enter your password" <?php echo $rateLimiter->isBlocked(
+						<label for="password">Password</label>
+						<div class="input-wrap">
+							<input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Enter your password" <?php echo $rateLimiter->isBlocked(
         "login",
     )
         ? "disabled"
         : ""; ?>>
+							<button type="button" class="input-action" id="togglePassword" aria-label="Show password"><i class="fa-solid fa-eye"></i></button>
+						</div>
 
-				<div class="link-row centered mt-4">
-					<button class="button primary" type="submit" id="loginBtn" <?php echo $rateLimiter->isBlocked(
+						<div class="form-actions mt-4">
+							<button class="button primary" type="submit" id="loginBtn" <?php echo $rateLimiter->isBlocked(
          "login",
      )
          ? "disabled"
          : ""; ?>>
-						<?php echo $rateLimiter->isBlocked("login") ? "Locked" : "Login"; ?>
-					</button>
-					<a class="button" href="../../../index.php">Back to home</a>
+								<?php echo $rateLimiter->isBlocked("login") ? "Locked" : "Login"; ?>
+							</button>
+							<a class="button" href="../../../index.php">Back to home</a>
+						</div>
+					</form>
+					<p class="footer mt-6">
+						Don't have an account? <a href="./register.php">Register here</a><br>
+						Forgot your password? <a href="./forgot-password.php">Reset password</a><br>
+						Didn't receive verification email? <a href="./resend-verification.php">Resend verification</a>
+					</p>
 				</div>
-			</form>
-			<p class="footer mt-6">
-				Don't have an account? <a href="./register.php">Register here</a><br>
-				Forgot your password? <a href="./forgot-password.php">Reset password</a><br>
-				Didn't receive verification email? <a href="./resend-verification.php">Resend verification</a>
-			</p>
+				<div class="auth-side">
+					<h3><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Secure by design</h3>
+					<div class="auth-tips">
+						<div class="tip"><i class="fa-solid fa-envelope-circle-check" aria-hidden="true"></i> Verified emails only</div>
+						<div class="tip"><i class="fa-solid fa-gauge-high" aria-hidden="true"></i> Rate‑limited logins</div>
+						<div class="tip"><i class="fa-solid fa-lock" aria-hidden="true"></i> Protected sessions</div>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 	<div class="demo-warning">*This is a demo version of the website</div>
@@ -183,6 +205,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
                 document.body.classList.remove('theme-transition');
             }, 320);
         });
+
+        // Password show/hide toggle
+        function installPasswordToggle(inputId, toggleId) {
+            const input = document.getElementById(inputId);
+            const toggle = document.getElementById(toggleId);
+            if (!input || !toggle) return;
+            toggle.addEventListener('click', function(){
+                const isPassword = input.getAttribute('type') === 'password';
+                input.setAttribute('type', isPassword ? 'text' : 'password');
+                toggle.innerHTML = isPassword ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+                toggle.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+            });
+        }
 
         // Show error as toast if present
         <?php if (!empty($error)): ?>
@@ -239,6 +274,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
 
             // Prevent double submission
             FormUtils.preventDoubleSubmit(form);
+
+            // Install password toggle
+            installPasswordToggle('password', 'togglePassword');
         });
     })();
     </script>

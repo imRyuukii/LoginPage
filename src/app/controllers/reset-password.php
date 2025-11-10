@@ -14,7 +14,10 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 session_start();
 require_once "../models/user-functions-db.php";
 require_once "../security/csrf.php";
+require_once __DIR__ . "/../security/headers.php";
 csrf_ensure_initialized();
+apply_default_security_headers();
+apply_sensitive_nocache();
 
 $error = "";
 $success = "";
@@ -75,12 +78,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $validToken) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reset Password - LoginPage</title>
     <link rel="icon" type="image/png" href="../../public/images/logo.png">
-    <link rel="stylesheet" href="../../public/css/style.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="../../public/css/style.css?v=<?php echo filemtime(__DIR__ . "/../../public/css/style.css"); ?>">
 </head>
 <body>
     <?php $NAV_BASE='../../'; include __DIR__ . '/../../public/partials/navbar.php'; ?>
     <div class="container page">
-        <div class="card">
+        <div class="card auth-card">
             <h1>🔐 Reset Password</h1>
 
             <?php if (!empty($error)): ?>
@@ -146,14 +149,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $validToken) {
                     ); ?>">
 
                     <label for="password">New Password</label>
-                    <input type="password" id="password" name="password" required
+                    <div class="input-wrap">
+                      <input type="password" id="password" name="password" required
                            minlength="6" placeholder="Enter your new password"
                            autocomplete="new-password">
+                      <button type="button" class="input-action" id="togglePasswordReset" aria-label="Show password"><i class="fa-solid fa-eye"></i></button>
+                    </div>
 
                     <label for="confirm_password">Confirm New Password</label>
-                    <input type="password" id="confirm_password" name="confirm_password" required
+                    <div class="input-wrap">
+                      <input type="password" id="confirm_password" name="confirm_password" required
                            minlength="6" placeholder="Confirm your new password"
                            autocomplete="new-password">
+                      <button type="button" class="input-action" id="toggleConfirmReset" aria-label="Show password"><i class="fa-solid fa-eye"></i></button>
+                    </div>
 
                     <div class="password-strength" id="passwordStrength" style="display: none;">
                         <div class="strength-meter">
@@ -302,6 +311,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $validToken) {
 
             passwordField.addEventListener('input', checkPasswordMatch);
             confirmField.addEventListener('input', checkPasswordMatch);
+
+            // Show/hide toggles
+            var t1 = document.getElementById('togglePasswordReset');
+            var t2 = document.getElementById('toggleConfirmReset');
+            if (t1) {
+              t1.addEventListener('click', function(){
+                var isPwd = passwordField.getAttribute('type') === 'password';
+                passwordField.setAttribute('type', isPwd ? 'text' : 'password');
+                t1.innerHTML = isPwd ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+                t1.setAttribute('aria-label', isPwd ? 'Hide password' : 'Show password');
+              });
+            }
+            if (t2) {
+              t2.addEventListener('click', function(){
+                var isPwd = confirmField.getAttribute('type') === 'password';
+                confirmField.setAttribute('type', isPwd ? 'text' : 'password');
+                t2.innerHTML = isPwd ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+                t2.setAttribute('aria-label', isPwd ? 'Hide password' : 'Show password');
+              });
+            }
         }
     })();
     </script>

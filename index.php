@@ -14,7 +14,9 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 session_start();
 require_once "./src/app/models/user-functions-db.php";
 require_once "./src/app/security/csrf.php";
+require_once "./src/app/security/headers.php";
 csrf_ensure_initialized();
+apply_default_security_headers();
 require_once "./src/config/database.php";
 $isLoggedIn = isset($_SESSION["user"]);
 
@@ -97,10 +99,10 @@ try {
     <link rel="icon" type="image/png" sizes="32x32" href="./src/public/images/logo.png">
     <link rel="apple-touch-icon" href="./src/public/images/logo.png">
 
-    <link rel="stylesheet" href="src/public/css/style.css?v=<?php echo time(); ?>">
-    <script src="./src/public/js/heartbeat.js" defer></script>
-    <script src="./src/public/js/toast.js" defer></script>
-    <script src="./src/public/js/form-utils.js" defer></script>
+    <link rel="stylesheet" href="src/public/css/style.css?v=<?php echo filemtime(__DIR__ . "/src/public/css/style.css"); ?>">
+    <script src="./src/public/js/heartbeat.js?v=<?php echo filemtime(__DIR__ . "/src/public/js/heartbeat.js"); ?>" defer></script>
+    <script src="./src/public/js/toast.js?v=<?php echo filemtime(__DIR__ . "/src/public/js/toast.js"); ?>" defer></script>
+    <script src="./src/public/js/form-utils.js?v=<?php echo filemtime(__DIR__ . "/src/public/js/form-utils.js"); ?>" defer></script>
 </head>
 <body>
 <?php

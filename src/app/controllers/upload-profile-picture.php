@@ -15,9 +15,12 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 session_start();
 
 require_once '../security/csrf.php';
+require_once __DIR__ . '/../security/headers.php';
 require_once '../../config/database.php';
 
 csrf_ensure_initialized();
+apply_default_security_headers();
+apply_sensitive_nocache();
 csrf_require_post();
 
 // Check if user is logged in

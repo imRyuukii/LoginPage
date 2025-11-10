@@ -14,9 +14,12 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 session_start();
 require_once "../models/user-functions-db.php";
 require_once "../security/csrf.php";
+require_once __DIR__ . "/../security/headers.php";
 require_once "../services/EmailService.php";
 require_once __DIR__ . "/../services/RateLimiter.php";
 csrf_ensure_initialized();
+apply_default_security_headers();
+apply_sensitive_nocache();
 
 $error = "";
 $success = "";
@@ -110,7 +113,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resend Email Verification</title>
     <link rel="icon" type="image/png" href="../../public/images/logo.png">
-    <link rel="stylesheet" href="../../public/css/style.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="../../public/css/style.css?v=<?php echo filemtime(__DIR__ . "/../../public/css/style.css"); ?>">
 </head>
 <body>
     <?php $NAV_BASE='../../'; include __DIR__ . '/../../public/partials/navbar.php'; ?>

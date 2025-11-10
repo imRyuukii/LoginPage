@@ -14,7 +14,10 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 session_start();
 require_once '../models/user-functions-db.php';
 require_once '../security/csrf.php';
+require_once __DIR__ . '/../security/headers.php';
 csrf_ensure_initialized();
+apply_default_security_headers();
+apply_sensitive_nocache();
 
 // Only allow POST requests
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {

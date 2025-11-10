@@ -28,3 +28,6 @@
 @import url('./alerts.css?v=1');
 @import url('./utilities.css?v=1');
 @import url('./responsive.css?v=1');
+/* New modules */
+@import url('./auth.css?v=1');
+@import url('./profile-page.css?v=1');

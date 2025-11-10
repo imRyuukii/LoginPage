@@ -44,9 +44,27 @@ function loginUser(string $usernameOrEmail, string $password)
 
     // Verify password if user was found
     if ($user && password_verify($password, $user["password_hash"])) {
+        // Opportunistic upgrade to stronger hash if PHP default changes or cost increases
+        maybeRehashPassword((int)$user['id'], (string)$user['password_hash'], $password);
         return $user; // Controllers expect id, username, name, email, role
     }
     return false;
+}
+
+/**
+ * Rehash the user's password transparently when the algorithm/cost changes.
+ */
+function maybeRehashPassword(int $userId, string $currentHash, string $plainPassword): void
+{
+    try {
+        if (password_needs_rehash($currentHash, PASSWORD_DEFAULT)) {
+            global $db;
+            $newHash = password_hash($plainPassword, PASSWORD_DEFAULT);
+            $db->query('UPDATE users SET password_hash = ? WHERE id = ?', [$newHash, $userId]);
+        }
+    } catch (Exception $e) {
+        error_log('maybeRehashPassword failed: ' . $e->getMessage());
+    }
 }
 
 function registerUser(
@@ -658,5 +676,86 @@ function recordLoginEvent(int $userId, ?string $ip = null, ?string $userAgent = 
         // If table doesn't exist or any other failure, log and continue (should not block login)
         error_log("recordLoginEvent failed: " . $e->getMessage());
         return false;
+    }
+}
+
+// =========================
+// Profile editing helpers
+// =========================
+/**
+ * Update user's public profile (username and display name)
+ */
+function updateUserProfile(int $userId, string $username, string $name): array
+{
+    $username = trim($username);
+    $name = trim($name);
+
+    if ($name === '' || strlen($name) < 2) {
+        return [ 'success' => false, 'message' => 'Name must be at least 2 characters' ];
+    }
+    if (!preg_match('/^[A-Za-z0-9_]{3,20}$/', $username)) {
+        return [ 'success' => false, 'message' => 'Username must be 3-20 chars, letters/numbers/underscore only' ];
+    }
+
+    try {
+        global $db;
+        // Ensure username unique (excluding this user)
+        $stmt = $db->query('SELECT id FROM users WHERE username = ? AND id <> ?', [$username, $userId]);
+        $row = $stmt->fetch();
+        if ($row) {
+            return [ 'success' => false, 'message' => 'Username is already taken' ];
+        }
+
+        $db->query('UPDATE users SET username = ?, name = ? WHERE id = ?', [$username, $name, $userId]);
+        return [ 'success' => true, 'message' => 'Profile updated' ];
+    } catch (Exception $e) {
+        error_log('updateUserProfile failed: ' . $e->getMessage());
+        return [ 'success' => false, 'message' => 'Failed to update profile' ];
+    }
+}
+
+/**
+ * Change user password after verifying the current password
+ */
+function changeUserPassword(int $userId, string $currentPassword, string $newPassword): array
+{
+    if (strlen($newPassword) < 8) {
+        return [ 'success' => false, 'message' => 'New password must be at least 8 characters' ];
+    }
+
+    try {
+        global $db;
+        $stmt = $db->query('SELECT password_hash FROM users WHERE id = ?', [$userId]);
+        $row = $stmt->fetch();
+        if (!$row) {
+            return [ 'success' => false, 'message' => 'User not found' ];
+        }
+        if (!password_verify($currentPassword, $row['password_hash'])) {
+            return [ 'success' => false, 'message' => 'Current password is incorrect' ];
+        }
+
+        $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
+        $db->query('UPDATE users SET password_hash = ?, password_reset_at = NOW() WHERE id = ?', [$newHash, $userId]);
+        return [ 'success' => true, 'message' => 'Password updated successfully' ];
+    } catch (Exception $e) {
+        error_log('changeUserPassword failed: ' . $e->getMessage());
+        return [ 'success' => false, 'message' => 'Failed to change password' ];
+    }
+}
+
+/**
+ * Recent login events for a user (most recent first)
+ */
+function getRecentLoginEventsForUser(int $userId, int $limit = 5): array
+{
+    try {
+        global $db;
+        $limit = max(1, (int)$limit);
+        $sql = "SELECT id, created_at, ip_address, user_agent FROM login_events WHERE user_id = ? ORDER BY created_at DESC LIMIT $limit";
+        $stmt = $db->query($sql, [$userId]);
+        return $stmt->fetchAll();
+    } catch (Exception $e) {
+        error_log('getRecentLoginEventsForUser failed: ' . $e->getMessage());
+        return [];
     }
 }

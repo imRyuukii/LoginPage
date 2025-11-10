@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /LoginPage/src/app/controllers/
+Disallow: /LoginPage/src/public/api/
+Allow: /LoginPage/index.php
+
+Sitemap: https://app.theloginpage.me/LoginPage/sitemap.xml

@@ -12,7 +12,10 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 session_start();
 require_once '../security/csrf.php';
+require_once __DIR__ . '/../security/headers.php';
 csrf_ensure_initialized();
+apply_default_security_headers();
+apply_sensitive_nocache();
 
 // Allow only POST requests with CSRF token
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
