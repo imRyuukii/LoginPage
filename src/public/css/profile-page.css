@@ -20,6 +20,8 @@
 }
 
 .avatar-lg {
+    width: 96px;
+    height: 96px;
     border-radius: 50%;
     border: 2px solid var(--border);
     object-fit: cover;
@@ -27,13 +29,15 @@
 }
 
 .profile-title {
-    margin: 0;
+    margin: 0 0 0 6px; /* nudge 6px right */
     font-size: var(--fs-h2);
+    text-align: left; /* override global heading centering for profile */
 }
 .profile-subtitle {
-    margin: 4px 0 0 0;
+    margin: 4px 0 0 6px; /* nudge 6px right */
     color: var(--muted);
     font-weight: 700;
+    text-align: left; /* keep subtitle aligned with title */
 }
 
 .badges {
@@ -41,6 +45,7 @@
     flex-wrap: wrap;
     gap: 8px;
     margin-top: 8px;
+    margin-left: 6px; /* nudge 6px right */
 }
 .badge {
     display: inline-flex;
@@ -79,11 +84,15 @@
     gap: 10px;
     margin-top: 10px;
 }
+@media (max-width: 640px) {
+    .meta-grid { grid-template-columns: 1fr; }
+}
 .meta {
     padding: 10px 12px;
     border: 1px solid var(--border);
     border-radius: 12px;
     background: var(--glass);
+    min-width: 0; /* allow grid item to shrink and avoid overflow */
 }
 .meta .label {
     color: var(--muted);
@@ -93,13 +102,19 @@
 }
 .meta .value {
     font-weight: 1000;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    hyphens: auto;
 }
 
 .profile-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 14px;
-    margin-top: 12px;
+    margin-top: 40px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
 }
 @media (max-width: 900px) {
     .profile-grid {
@@ -107,33 +122,25 @@
     }
 }
 
+/* Profile action buttons (Save, Change email, 2FA, Recovery) */
+.profile-action-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    align-items: stretch;
+}
+.profile-action-row .button {
+    /*width: 100%;*/
+    margin: 0; /* override default vertical margins for tighter row */
+    padding: 12px 16px; /* consistent internal spacing */
+    text-align: center;
+}
+@media (max-width: 640px) {
+    .profile-action-row { grid-template-columns: 1fr; }
+}
+
 .quick-actions {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
-}
-
-/* Ensure square avatar and non-stretched image */
-.profile-header .profile-picture-container img,
-.avatar-lg {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
-}
-
-/* Responsive tweaks */
-@media (max-width: 900px) {
-    .meta-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-@media (max-width: 640px) {
-    .profile-header {
-        grid-template-columns: 1fr;
-        gap: 12px;
-    }
-    .meta-grid {
-        grid-template-columns: 1fr;
-    }
 }

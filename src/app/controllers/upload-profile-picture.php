@@ -16,11 +16,13 @@ session_start();
 
 require_once '../security/csrf.php';
 require_once __DIR__ . '/../security/headers.php';
+require_once __DIR__ . '/../security/session_guard.php';
 require_once '../../config/database.php';
 
 csrf_ensure_initialized();
 apply_default_security_headers();
 apply_sensitive_nocache();
+session_enforce_password_rotation();
 csrf_require_post();
 
 // Check if user is logged in
@@ -37,7 +39,7 @@ $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
 // Create upload directory if it doesn't exist
 if (!is_dir($uploadDir)) {
-    if (!mkdir($uploadDir, 0777, true)) {
+    if (!mkdir($uploadDir, 0755, true)) {
         $_SESSION['upload_error'] = 'Failed to create upload directory. Path: ' . $uploadDir;
         header('Location: profile.php');
         exit;
@@ -104,6 +106,33 @@ if (!move_uploaded_file($file['tmp_name'], $filepath)) {
     header('Location: profile.php');
     exit;
 }
+
+// Extra hardening: ensure the saved file is a real image and set safe permissions
+$validImage = false;
+if (function_exists('exif_imagetype')) {
+    $imgType = @exif_imagetype($filepath);
+    $validImage = ($imgType !== false);
+} else {
+    // Fallback when EXIF extension is not available
+    $probe = @getimagesize($filepath); // returns false if not a valid image
+    $validImage = ($probe !== false);
+}
+if (!$validImage) {
+    @unlink($filepath);
+    $_SESSION['upload_error'] = 'Uploaded file is not a valid image.';
+    header('Location: profile.php');
+    exit;
+}
+// Enforce dimensions (max 1024x1024)
+$dim = @getimagesize($filepath);
+if (!$dim || $dim[0] > 1024 || $dim[1] > 1024) {
+    @unlink($filepath);
+    $_SESSION['upload_error'] = 'Image too large. Max 1024x1024 pixels.';
+    header('Location: profile.php');
+    exit;
+}
+// Set safe perms (rw-r--r--)
+@chmod($filepath, 0644);
 
 // Update database
 try {

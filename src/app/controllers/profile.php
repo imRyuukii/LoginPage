@@ -15,8 +15,10 @@ session_start();
 require_once "../models/user-functions-db.php";
 require_once "../security/csrf.php";
 require_once __DIR__ . "/../security/headers.php";
+require_once __DIR__ . "/../security/session_guard.php";
 csrf_ensure_initialized();
 apply_default_security_headers();
+session_enforce_password_rotation();
 
 if (!isset($_SESSION["user"])) {
     header(
@@ -65,18 +67,13 @@ if (
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Profile • Your Account</title>
 	<link rel="icon" type="image/png" href="/LoginPage/src/public/images/logo.png">
-    <link rel="stylesheet" href="/LoginPage/src/public/css/style.css?v=<?php echo filemtime(
-        __DIR__ . "/../../public/css/style.css",
-    ); ?>">
-	<script src="/LoginPage/src/public/js/toast.js?v=<?php echo filemtime(
-     __DIR__ . "/../../public/js/toast.js",
- ); ?>" defer></script>
-	<script src="/LoginPage/src/public/js/form-utils.js?v=<?php echo filemtime(
-     __DIR__ . "/../../public/js/form-utils.js",
- ); ?>" defer></script>
-	<script src="/LoginPage/src/public/js/heartbeat.js?v=<?php echo filemtime(
-     __DIR__ . "/../../public/js/heartbeat.js",
- ); ?>" defer></script>
+    <link rel="stylesheet" href="/LoginPage/src/public/css/style.css?v=<?php echo filemtime(__DIR__ . '/../../public/css/style.css'); ?>">
+    <link rel="stylesheet" href="/LoginPage/src/public/css/profile-page.css?v=<?php echo filemtime(__DIR__ . '/../../public/css/profile-page.css'); ?>">
+	<script src="/LoginPage/src/public/js/toast.js?v=<?php echo filemtime(__DIR__ . '/../../public/js/toast.js'); ?>" defer></script>
+	<script src="/LoginPage/src/public/js/form-utils.js?v=<?php echo filemtime(__DIR__ . '/../../public/js/form-utils.js'); ?>" defer></script>
+	<script src="/LoginPage/src/public/js/heartbeat.js?v=<?php echo filemtime(__DIR__ . '/../../public/js/heartbeat.js'); ?>" defer></script>
+    <meta name="csrf-token" content="<?php echo htmlspecialchars(csrf_token()); ?>">
+    <script src="/LoginPage/src/public/js/profile-page.js?v=<?php echo filemtime(__DIR__ . '/../../public/js/profile-page.js'); ?>" defer></script>
 </head>
 <body>
 	<?php
@@ -205,62 +202,47 @@ echo htmlspecialchars($_SESSION["password_error"]);
 unset($_SESSION["password_error"]);
 ?></div><?php endif; ?>
 
-			<div class="profile-grid">
-				<div>
-					<h3>Edit profile</h3>
-					<form method="post" action="/LoginPage/src/app/controllers/update-profile.php" id="editProfileForm">
-						<?php echo csrf_field(); ?>
-						<label for="name">Display name</label>
-						<input type="text" id="name" name="name" value="<?php echo htmlspecialchars(
+				<div class="profile-grid">
+					<div>
+						<h3>Edit profile</h3>
+						<form method="post" action="/LoginPage/src/app/controllers/update-profile.php" id="editProfileForm">
+							<?php echo csrf_field(); ?>
+							<label for="name">Display name</label>
+							<input type="text" id="name" name="name" value="<?php echo htmlspecialchars(
           $user["name"],
       ); ?>" minlength="2" maxlength="60" required>
-						<label for="username">Username</label>
-						<input type="text" id="username" name="username" value="<?php echo htmlspecialchars(
+							<label for="username">Username</label>
+							<input type="text" id="username" name="username" value="<?php echo htmlspecialchars(
           $user["login"],
       ); ?>" pattern="^[A-Za-z0-9_]{3,20}$" required>
-						<div class="mt-3">
+<div class="profile-action-row mt-3">
 							<button class="button primary" type="submit">Save changes</button>
+							<a class="button" href="/LoginPage/src/app/controllers/change-email.php">Change email</a>
+							<?php if (empty($user['twofa_enabled'])): ?>
+								<a class="button" href="/LoginPage/src/app/controllers/enable-2fa.php">Enable 2FA</a>
+							<?php else: ?>
+								<a class="button" href="/LoginPage/src/app/controllers/disable-2fa.php">Disable 2FA</a>
+								<a class="button" href="/LoginPage/src/app/controllers/generate-2fa-codes.php">Recovery codes</a>
+							<?php endif; ?>
 						</div>
-					</form>
+						</form>
+					</div>
+					<div>
+						<h3>Change password</h3>
+						<form method="post" action="/LoginPage/src/app/controllers/change-password.php" id="changePasswordForm">
+							<?php echo csrf_field(); ?>
+							<label for="current_password">Current password</label>
+							<input type="password" id="current_password" name="current_password" autocomplete="current-password" required>
+							<label for="new_password">New password</label>
+							<input type="password" id="new_password" name="new_password" autocomplete="new-password" minlength="8" required>
+							<label for="confirm_password">Confirm new password</label>
+							<input type="password" id="confirm_password" name="confirm_password" autocomplete="new-password" required>
+							<div class="mt-3">
+								<button class="button" type="submit">Update password</button>
+							</div>
+						</form>
+					</div>
 				</div>
-				<div>
-					<h3>Change password</h3>
-					<form method="post" action="/LoginPage/src/app/controllers/change-password.php" id="changePasswordForm">
-						<?php echo csrf_field(); ?>
-						<label for="current_password">Current password</label>
-						<input type="password" id="current_password" name="current_password" autocomplete="current-password" required>
-						<label for="new_password">New password</label>
-						<input type="password" id="new_password" name="new_password" autocomplete="new-password" minlength="8" required>
-						<label for="confirm_password">Confirm new password</label>
-						<input type="password" id="confirm_password" name="confirm_password" autocomplete="new-password" required>
-						<div class="mt-3">
-							<button class="button" type="submit">Update password</button>
-						</div>
-					</form>
-				</div>
-			</div>
-
-			<?php // Recent activity for this user
-   $events = getRecentLoginEventsForUser((int) $user["id"], 5); ?>
-			<div class="panel mt-4" style="padding: 12px;">
-				<h3>Recent activity</h3>
-				<?php if (empty($events)): ?>
-					<p class="mt-2">No recent logins yet.</p>
-				<?php else: ?>
-					<ul class="list" style="margin-top:8px;">
-						<?php foreach ($events as $ev): ?>
-						<li class="list-item" style="display:flex; justify-content:space-between; gap:10px;">
-							<span><i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i> <?php echo htmlspecialchars(
-           date("M j, Y H:i", strtotime($ev["created_at"])),
-       ); ?></span>
-							<span class="muted" title="<?php echo htmlspecialchars(
-           $ev["user_agent"] ?? "",
-       ); ?>"><?php echo htmlspecialchars($ev["ip_address"] ?? ""); ?></span>
-						</li>
-						<?php endforeach; ?>
-					</ul>
-				<?php endif; ?>
-			</div>
 		</div>
 	</div>
 
@@ -509,107 +491,5 @@ $val
 	<?php endif;
  ?>
 	<div class="demo-warning">*This is a demo version of the website</div>
-    <script>
-    (function() {
-        const CSRF_TOKEN = '<?php echo htmlspecialchars(csrf_token()); ?>';
-        // Install heartbeat for presence
-        window.addEventListener('DOMContentLoaded', function(){
-            if (window.Heartbeat) {
-                window.Heartbeat.installHeartbeatOnLoad({ url: '/LoginPage/src/public/api/heartbeat.php', csrf: CSRF_TOKEN });
-            }
-        });
-        // Theme toggle
-        const root = document.documentElement;
-        const stored = localStorage.getItem('theme');
-        const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
-        const initial = stored || (prefersLight ? 'light' : 'dark');
-        if (initial === 'light') { root.setAttribute('data-theme', 'light'); } else { root.removeAttribute('data-theme'); }
-        const btn = document.getElementById('themeToggle');
-        function setIcon() { const isLight = root.getAttribute('data-theme') === 'light'; btn.textContent = isLight ? '☀️' : '🌙'; btn.title = isLight ? 'Switch to dark mode' : 'Switch to light mode'; }
-        setIcon();
-        btn.addEventListener('click', function() {
-            document.body.classList.add('theme-transition');
-            const isLight = root.getAttribute('data-theme') === 'light';
-            if (isLight) { root.removeAttribute('data-theme'); localStorage.setItem('theme', 'dark'); }
-            else { root.setAttribute('data-theme', 'light'); localStorage.setItem('theme', 'light'); }
-            setIcon();
-            window.setTimeout(function(){ document.body.classList.remove('theme-transition'); }, 320);
-        });
-    })();
-    </script>
-    <script>
-    // Live update "Last Active" for admin user list
-    (function() {
-        const IS_ADMIN = <?php echo $isAdmin ? "true" : "false"; ?>;
-        if (!IS_ADMIN) return;
-        const ENDPOINT = '../../public/api/users/last-activity.php';
-        function visibleIds() {
-            return Array.from(document.querySelectorAll('.user-item[data-user-id]')).map(function(el){ return el.getAttribute('data-user-id'); }).filter(function(v){ return v && /^\d+$/.test(v); }).join(',');
-        }
-        function apply(data) {
-            if (!Array.isArray(data)) return;
-            data.forEach(function(u){
-                const root = document.querySelector('.user-item[data-user-id="' + u.id + '"]');
-                if (!root) return;
-                const el = root.querySelector('.last-active-time');
-                if (el) { el.textContent = u.last_active_text; }
-                const avatar = root.querySelector('.user-avatar');
-                if (avatar) { avatar.classList.toggle('online', !!u.online); }
-            });
-        }
-        function tick(){
-            const url = ENDPOINT + '?t=' + Date.now() + '&ids=' + encodeURIComponent(visibleIds());
-            fetch(url, { headers: { 'Accept': 'application/json', 'Cache-Control': 'no-cache' }, cache: 'no-store' })
-                .then(function(r){ return r.ok ? r.json() : Promise.reject(); })
-                .then(apply)
-                .catch(function(){});
-        }
-        window.__refreshLastActive = tick;
-        if (window.__deferLastActiveRefresh) { tick(); window.__deferLastActiveRefresh = false; }
-        tick();
-        setInterval(tick, 10000);
-    })();
-    </script>
-    <script>
-        // Profile picture upload + form helpers
-        (function() {
-            const img = document.getElementById('profilePictureImg');
-            const input = document.getElementById('profilePictureInput');
-            const form = document.getElementById('profilePictureForm');
-            if (img && input && form) {
-                img.addEventListener('click', function() { input.click(); });
-                input.addEventListener('change', function() {
-                    if (this.files && this.files[0]) {
-                        const file = this.files[0];
-                        const maxSize = 2 * 1024 * 1024; // 2MB
-                        const allowed = ['image/jpeg','image/png','image/gif','image/webp'];
-                        if (file.size > maxSize) { alert('File size exceeds 2MB limit.'); this.value=''; return; }
-                        if (!allowed.includes(file.type)) { alert('Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.'); this.value=''; return; }
-                        if (confirm('Upload this image as your profile picture?')) { form.submit(); }
-                    }
-                });
-            }
-            // Form utils enhancements
-            if (window.FormUtils) {
-                const ep = document.getElementById('editProfileForm');
-                const un = document.getElementById('username');
-                if (ep) { FormUtils.preventDoubleSubmit(ep); }
-                if (un) { FormUtils.setupUsernameValidation(un); }
-                const cp = document.getElementById('changePasswordForm');
-                const np = document.getElementById('new_password');
-                const cf = document.getElementById('confirm_password');
-                if (cp) { FormUtils.preventDoubleSubmit(cp); }
-                if (np) { FormUtils.setupPasswordValidation(np, true); }
-                if (np && cf) { FormUtils.setupPasswordConfirmation(np, cf); }
-            }
-            // Show toast based on alerts
-            try {
-                var ok = document.querySelector('.alert.success');
-                var err = document.querySelector('.alert.error');
-                if (ok && window.Toast) { Toast.success(ok.textContent.trim(), 3500); }
-                if (err && window.Toast) { Toast.error(err.textContent.trim(), 4500); }
-            } catch (e) {}
-        })();
-    </script>
 </body>
 </html>

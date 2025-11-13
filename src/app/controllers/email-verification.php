@@ -44,9 +44,11 @@ if (isset($_GET['token']) && !empty($_GET['token'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Verification</title>
+    <title>Sulfur • Email Verification</title>
     <link rel="icon" type="image/png" href="../../public/images/logo.png">
     <link rel="stylesheet" href="../../public/css/style.css?v=<?php echo filemtime(__DIR__ . "/../../public/css/style.css"); ?>">
+    <script src="../../public/js/toast.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/toast.js"); ?>" defer></script>
+    <script src="../../public/js/auth-ui.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/auth-ui.js"); ?>" defer></script>
 </head>
 <body>
     <?php $NAV_BASE='../../'; include __DIR__ . '/../../public/partials/navbar.php'; ?>
@@ -99,50 +101,5 @@ if (isset($_GET['token']) && !empty($_GET['token'])) {
     </div>
     <div class="demo-warning">*This is a demo version of the website</div>
     
-    <script>
-    (function() {
-        const root = document.documentElement;
-        const stored = localStorage.getItem('theme');
-        const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
-        const initial = stored || (prefersLight ? 'light' : 'dark');
-        if (initial === 'light') {
-            root.setAttribute('data-theme', 'light');
-        } else {
-            root.removeAttribute('data-theme');
-        }
-        const btn = document.getElementById('themeToggle');
-
-        function setIcon() {
-            const isLight = root.getAttribute('data-theme') === 'light';
-            btn.textContent = isLight ? '☀️' : '🌙';
-            btn.title = isLight ? 'Switch to dark mode' : 'Switch to light mode';
-        }
-        setIcon();
-        btn.addEventListener('click', function() {
-            document.body.classList.add('theme-transition');
-            const isLight = root.getAttribute('data-theme') === 'light';
-            if (isLight) {
-                root.removeAttribute('data-theme');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                root.setAttribute('data-theme', 'light');
-                localStorage.setItem('theme', 'light');
-            }
-            setIcon();
-            window.setTimeout(function(){
-                document.body.classList.remove('theme-transition');
-            }, 320);
-        });
-        
-        // Auto-redirect to login after successful verification
-        <?php if (!empty($success)): ?>
-        setTimeout(function() {
-            if (confirm('Verification successful! Would you like to go to the login page now?')) {
-                window.location.href = './login.php';
-            }
-        }, 3000);
-        <?php endif; ?>
-    })();
-    </script>
 </body>
 </html>

@@ -59,6 +59,7 @@
     justify-content: center;
     font-family: 'Courier New', monospace;
     font-weight: 500;
+    overflow-anchor: none; /* prevent scroll anchoring jump on content changes */
 }
 
 .typewriter-text::after {

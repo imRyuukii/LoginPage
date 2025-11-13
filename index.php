@@ -20,7 +20,7 @@ apply_default_security_headers();
 require_once "./src/config/database.php";
 $isLoggedIn = isset($_SESSION["user"]);
 
-// If logged in, fetch fresh user data to get updated profile picture
+// If logged in, fetch fresh user data to get an updated profile picture
 if ($isLoggedIn) {
     try {
         $stmt = $db->query("SELECT * FROM users WHERE id = ?", [
@@ -78,31 +78,34 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Secure authentication system with email verification, password reset, and real-time user management. Professional login and registration platform.">
     <meta name="keywords" content="login, authentication, registration, secure login, email verification, password reset, user management">
-    <meta name="author" content="LoginPage System">
+    <meta name="author" content="Sulfur">
     <meta name="theme-color" content="#124e66">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="LoginPage - Secure Authentication System">
+    <meta property="og:title" content="Sulfur • Home">
     <meta property="og:description" content="Professional authentication platform with email verification and user management">
     <meta property="og:image" content="./src/public/images/logo.png">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="LoginPage - Secure Authentication System">
+    <meta name="twitter:title" content="Sulfur • Home">
     <meta name="twitter:description" content="Professional authentication platform with email verification and user management">
     <meta name="twitter:image" content="./src/public/images/logo.png">
 
-    <title>LoginPage - Secure Authentication System</title>
+    <title>Sulfur • Home</title>
 
     <!-- Favicons -->
     <link rel="icon" type="image/png" sizes="32x32" href="./src/public/images/logo.png">
     <link rel="apple-touch-icon" href="./src/public/images/logo.png">
 
     <link rel="stylesheet" href="src/public/css/style.css?v=<?php echo filemtime(__DIR__ . "/src/public/css/style.css"); ?>">
+    <meta name="csrf-token" content="<?php echo htmlspecialchars(csrf_token()); ?>">
+    <meta name="is-logged-in" content="<?php echo $isLoggedIn ? '1' : '0'; ?>">
     <script src="./src/public/js/heartbeat.js?v=<?php echo filemtime(__DIR__ . "/src/public/js/heartbeat.js"); ?>" defer></script>
     <script src="./src/public/js/toast.js?v=<?php echo filemtime(__DIR__ . "/src/public/js/toast.js"); ?>" defer></script>
     <script src="./src/public/js/form-utils.js?v=<?php echo filemtime(__DIR__ . "/src/public/js/form-utils.js"); ?>" defer></script>
+    <script src="./src/public/js/home.js?v=<?php echo filemtime(__DIR__ . "/src/public/js/home.js"); ?>" defer></script>
 </head>
 <body>
 <?php
@@ -143,50 +146,70 @@ include __DIR__ . "/src/public/partials/navbar.php";
       .trust-strip { display:grid; grid-auto-flow: column; gap: 10px; align-items:center; justify-content:center; text-align:center; }
       .trust-pill { display:inline-flex; gap:8px; align-items:center; padding:8px 12px; border-radius:999px; border:1px solid var(--border); background: var(--glass); font-weight:800; font-size: 0.9rem; }
       @media (max-width: 820px) { .features-grid { grid-template-columns: 1fr; } .trust-strip { grid-auto-flow: row; } }
+
+      /* New Welcome Hero card */
+      .welcome-hero { position: relative; overflow: hidden; padding: 28px 24px; min-height: 180px; }
+      .welcome-hero .wh-grid { display:grid; grid-template-columns: 1.8fr .4fr; gap:16px; align-items: center; }
+      @media (max-width: 820px) { .welcome-hero .wh-grid { grid-template-columns: 1fr; } .welcome-hero { text-align:center; } }
+      .wh-chip { display:inline-flex; align-items:center; padding:6px 12px; border:1px solid var(--border); border-radius:999px; background: var(--glass); font-weight:900; font-size:12px; color: var(--muted); }
+      .wh-title { margin:10px 0 0; font-size: clamp(24px, 4vw, 36px); line-height:1.1; }
+      .wh-greeting { color: var(--text); }
+      .wh-name { color: var(--primary); font-weight:1000; display:block; position: relative; }
+      .wh-name::after { content:''; display:block; height:6px; border-radius:999px; margin-top:8px; background: linear-gradient(90deg, var(--primary-400), var(--accent-400)); filter: blur(1px); opacity:.85; }
+      .wh-meta { margin-top:10px; color: var(--muted); font-weight:800; }
+      .wh-center { margin: 0 auto; width: 100%; max-width: min(600px, calc(100% - 220px)); text-align: center; position: relative; z-index: 2; }
+      .wh-row { position: relative; display: flex; justify-content: center; }
+      .wh-right { position: absolute; top: 50%; right: 40px; transform: translateY(-50%); display:flex; align-items:center; justify-content:center; width: auto; z-index: 1; }
+      .wh-orb { position: relative; width:120px; height:120px; border-radius:50%; background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.06), rgba(255,255,255,0) 60% ); border:1px solid var(--border); box-shadow: var(--shadow-md); }
+      .wh-avatar { position:absolute; inset:8px; width: calc(100% - 16px); height: calc(100% - 16px); border-radius:50%; object-fit:cover; }
+      .wh-ring { position:absolute; inset:-4px; border-radius:50%; background: conic-gradient(from 0deg, var(--primary-400), transparent 30%, var(--accent-400), transparent 60%, var(--primary-400)); opacity:.35; animation: spin-slow 10s linear infinite; }
+      @media (prefers-reduced-motion: reduce) { .wh-ring { animation: none; } }
+      @keyframes spin-slow { to { transform: rotate(360deg); } }
+      .wh-accent { position:absolute; filter: blur(14px); opacity:.18; pointer-events:none; }
+      .wh-accent-1 { width:260px; height:260px; top:-80px; left:-40px; background: radial-gradient(circle, var(--primary-400), transparent 60%); }
+      .wh-accent-2 { width:240px; height:240px; bottom:-100px; right:-60px; background: radial-gradient(circle, var(--accent-400), transparent 60%); }
+      @media (max-width: 1279px) { .wh-row { flex-direction: column; padding-right: 0; } .wh-right { position: static; transform: none; margin: 16px auto 0; justify-content: center; } .wh-center { max-width: 600px; } }
+      @media (max-width: 540px) { .wh-orb { width: 96px; height: 96px; } }
     </style>
-    <div class="card">
+    <div class="card welcome-hero">
+        <div class="wh-accent wh-accent-1"></div>
+        <div class="wh-accent wh-accent-2"></div>
         <?php if ($isLoggedIn): ?>
-            <?php // Check if user has custom profile picture
-            if (
-                !empty($_SESSION["user"]["profile_picture"]) &&
-                file_exists(
-                    "./src/public/images/profile-pictures/" .
-                        $_SESSION["user"]["profile_picture"],
-                )
-            ) {
-                $imagePath =
-                    "./src/public/images/profile-pictures/" .
-                    htmlspecialchars($_SESSION["user"]["profile_picture"]);
+            <?php // Build profile image path (user-specific or fallback by role)
+            if (!empty($_SESSION["user"]["profile_picture"]) && file_exists("./src/public/images/profile-pictures/" . $_SESSION["user"]["profile_picture"])) {
+                $imagePath = "./src/public/images/profile-pictures/" . htmlspecialchars($_SESSION["user"]["profile_picture"]);
             } else {
-                // Fallback to default based on role
-                $userRole =
-                    $_SESSION["user"]["role"] ??
-                    ($_SESSION["user"]["login"] === "admin" ? "admin" : "user");
-                $profilePic =
-                    $userRole === "admin" ? "admin-pfp.jpg" : "user-pfp.jpg";
+                $userRole = $_SESSION["user"]["role"] ?? (($_SESSION["user"]["login"] ?? "") === "admin" ? "admin" : "user");
+                $profilePic = $userRole === "admin" ? "admin-pfp.jpg" : "user-pfp.jpg";
                 $imagePath = "./src/public/images/" . $profilePic;
             } ?>
-            <img src="<?php echo $imagePath; ?>" alt="Profile Picture" class="profile-picture">
-        <?php endif; ?>
-        <h1 class="welcome-text">WELCOME</h1>
-        <?php if ($isLoggedIn): ?>
-            <p>Logged in as: <strong><?php echo htmlspecialchars(
-                $_SESSION["user"]["login"],
-            ); ?></strong></p>
-            <div class="link-row mt-3">
-                <a class="button" href="./src/app/controllers/profile.php">Go to profile</a>
-                <form method="post" action="./src/app/controllers/logout.php" style="display:inline;">
-                    <?php echo csrf_field(); ?>
-                    <button class="button" type="submit">Logout</button>
-                </form>
+
+            <div class="wh-row">
+                <div class="wh-center">
+                    <h2 class="wh-title wh-greeting">Hi <span class="wh-name"><?php echo htmlspecialchars($_SESSION["user"]["name"] ?: $_SESSION["user"]["login"]); ?></span></h2>
+                    <div class="wh-meta">@<?php echo htmlspecialchars($_SESSION["user"]["login"]); ?> • <?php echo htmlspecialchars($_SESSION["user"]["role"] ?? 'user'); ?></div>
+                </div>
+                <div class="wh-right">
+                    <div class="wh-orb">
+                        <div class="wh-ring"></div>
+                        <img class="wh-avatar" src="<?php echo $imagePath; ?>" alt="Profile picture">
+                    </div>
+                </div>
             </div>
         <?php else: ?>
-            <p>You are not logged in. Please log in to use our website.</p>
-            <p class="link-row mt-3">
-                <a class="button primary" href="./src/app/controllers/login.php">Login</a>
-            </p>
+            <div class="wh-row">
+                <div class="wh-center">
+                    <h2 class="wh-title">Discover Sulfur</h2>
+                    <div class="wh-meta">Secure • Fast • Polished</div>
+                </div>
+                <div class="wh-right">
+                    <div class="wh-orb">
+                        <div class="wh-ring"></div>
+                        <img class="wh-avatar" src="./src/public/images/logo.png" alt="Sulfur">
+                    </div>
+                </div>
+            </div>
         <?php endif; ?>
-        <p class="footer mt-6">Demo auth flow with in-memory users.</p>
     </div>
 
     <!-- Info Cards Row -->
@@ -237,138 +260,5 @@ include __DIR__ . "/src/public/partials/navbar.php";
     </div>
 </div>
 <div class="demo-warning">*This is a demo version of the website</div>
-<script>
-    (function() {
-        const CSRF_TOKEN = '<?php echo htmlspecialchars(csrf_token()); ?>';
-        const IS_LOGGED_IN = <?php echo $isLoggedIn ? "true" : "false"; ?>;
-        window.addEventListener('DOMContentLoaded', function(){
-            if (IS_LOGGED_IN && window.Heartbeat) {
-                window.Heartbeat.installHeartbeatOnLoad({ url: './src/public/api/heartbeat.php', csrf: CSRF_TOKEN });
-            }
-        });
-        const root = document.documentElement;
-        const stored = localStorage.getItem('theme');
-        const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
-        const initial = stored || (prefersLight ? 'light' : 'dark');
-        if (initial === 'light') {
-            root.setAttribute('data-theme', 'light');
-        } else {
-            root.removeAttribute('data-theme');
-        }
-        const btn = document.getElementById('themeToggle');
-
-        function setIcon() {
-            const isLight = root.getAttribute('data-theme') === 'light';
-            btn.textContent = isLight ? '☀️' : '🌙';
-            btn.title = isLight ? 'Switch to dark mode' : 'Switch to light mode';
-        }
-        setIcon();
-        btn.addEventListener('click', function() {
-            document.body.classList.add('theme-transition');
-            const isLight = root.getAttribute('data-theme') === 'light';
-            if (isLight) {
-                root.removeAttribute('data-theme');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                root.setAttribute('data-theme', 'light');
-                localStorage.setItem('theme', 'light');
-            }
-            setIcon();
-            window.setTimeout(function(){
-                document.body.classList.remove('theme-transition');
-            }, 320);
-        });
-
-        // Heartbeat on home as well, so online status works anywhere when logged in
-        if (IS_LOGGED_IN) {
-            (function() {
-                let interval;
-                function send() {
-                    fetch('./src/public/api/heartbeat.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: 'csrf=' + encodeURIComponent(CSRF_TOKEN)
-                    }).catch(function(e){ /* silent */ });
-                }
-                function start(){ interval = setInterval(send, 30000); send(); }
-                function stop(){ if (interval) clearInterval(interval); }
-                document.addEventListener('visibilitychange', function(){
-                    if (!document.hidden) start(); else stop();
-                });
-                start();
-            })();
-        }
-
-        // Typewriter Effect
-        (function() {
-            const messages = [
-                "Try Logging in.",
-                "Share Your Thoughts.",
-                "Making an account is really simple."
-            ];
-            const typewriterElement = document.getElementById('typewriter');
-            let messageIndex = 0;
-            let charIndex = 0;
-            let isDeleting = false;
-            let typingSpeed = 100;
-            const deletingSpeed = 50;
-            const pauseBeforeDelete = 2000;
-            const pauseBeforeNext = 500;
-
-            function type() {
-                const currentMessage = messages[messageIndex];
-
-                if (isDeleting) {
-                    // Remove characters
-                    typewriterElement.textContent = currentMessage.substring(0, charIndex - 1);
-                    charIndex--;
-
-                    if (charIndex === 0) {
-                        isDeleting = false;
-                        messageIndex = (messageIndex + 1) % messages.length;
-                        setTimeout(type, pauseBeforeNext);
-                        return;
-                    }
-                    setTimeout(type, deletingSpeed);
-                } else {
-                    // Add characters
-                    typewriterElement.textContent = currentMessage.substring(0, charIndex + 1);
-                    charIndex++;
-
-                    if (charIndex === currentMessage.length) {
-                        isDeleting = true;
-                        setTimeout(type, pauseBeforeDelete);
-                        return;
-                    }
-                    setTimeout(type, typingSpeed);
-                }
-            }
-
-            // Start the typewriter effect
-            setTimeout(type, 500);
-        })();
-
-        // Count-up for Logins Today
-        (function(){
-          const el = document.querySelector('.stats-number[data-target]');
-          if (!el) return;
-          const target = parseInt(el.getAttribute('data-target') || '0', 10);
-          if (!Number.isFinite(target)) return;
-          const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-          if (reduce || target <= 0) { el.textContent = target.toLocaleString(); return; }
-          const duration = 900; // ms
-          const start = performance.now();
-          function tick(now){
-            const p = Math.min(1, (now - start) / duration);
-            const eased = 1 - Math.pow(1 - p, 3);
-            const val = Math.floor(eased * target);
-            el.textContent = val.toLocaleString();
-            if (p < 1) requestAnimationFrame(tick); else el.textContent = target.toLocaleString();
-          }
-          requestAnimationFrame(tick);
-        })();
-
-    })();
-</script>
 </body>
 </html>

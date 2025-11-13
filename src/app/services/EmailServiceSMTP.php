@@ -76,6 +76,21 @@ class EmailServiceSMTP
     }
 
     /**
+     * Send email change verification email
+     */
+    public function sendEmailChangeEmail($userEmail, $userName, $token)
+    {
+        $subject = "Confirm Your New Email Address - LoginPage";
+        $verifyUrl = "https://app.theloginpage.me/LoginPage/src/app/controllers/verify-email-change.php?token=" . urlencode($token);
+        $htmlBody = '<p>Hello, ' . htmlspecialchars($userName) . '!</p><p>Please confirm your new email by clicking the link below:</p><p><a href="' . htmlspecialchars($verifyUrl) . '">Confirm email change</a></p>';
+        $textBody = "Hello, $userName!\n\nPlease confirm your new email by visiting:\n$verifyUrl\n";
+        if ($this->smtpEnabled) {
+            return $this->sendEmailSMTP($userEmail, $subject, $htmlBody, $textBody);
+        }
+        return $this->sendEmailLocal($userEmail, $subject, $htmlBody, $textBody);
+    }
+
+    /**
      * Send password reset email
      */
     public function sendPasswordResetEmail($userEmail, $userName, $resetToken)
@@ -159,14 +174,42 @@ class EmailServiceSMTP
      */
     private function sendEmailLocal($to, $subject, $htmlBody, $textBody = null)
     {
+        // 1) Prefer local MailHog/Dev SMTP if available (127.0.0.1:1025)
+        if ($this->canConnect('127.0.0.1', 1025) || $this->canConnect('localhost', 1025)) {
+            try {
+                if (!class_exists("PHPMailer\\PHPMailer\\PHPMailer")) {
+                    // fall through to mail() if PHPMailer isn't available
+                    throw new Exception('PHPMailer missing for MailHog path');
+                }
+                $mail = new PHPMailer(true);
+                $mail->isSMTP();
+                $mail->Host = '127.0.0.1';
+                $mail->Port = 1025;
+                $mail->SMTPAuth = false; // MailHog does not require auth
+                $mail->SMTPSecure = false;
+                $mail->setFrom($this->fromEmail, $this->fromName);
+                $mail->addAddress($to);
+                $mail->isHTML(true);
+                $mail->Subject = $subject;
+                $mail->Body = $htmlBody;
+                if ($textBody) { $mail->AltBody = $textBody; }
+                $mail->send();
+                error_log("Dev SMTP (MailHog) email sent to: $to");
+                return true;
+            } catch (Exception $e) {
+                error_log("Dev SMTP (MailHog) failed: " . $e->getMessage());
+                // fall through to mail()
+            }
+        }
+
+        // 2) Fallback to PHP mail()
         // Create boundary for multipart email
         $boundary = uniqid("boundary_");
 
         // Headers
         $headers = [];
         $headers[] = "MIME-Version: 1.0";
-        $headers[] =
-            'Content-Type: multipart/alternative; boundary="' . $boundary . '"';
+        $headers[] = 'Content-Type: multipart/alternative; boundary="' . $boundary . '"';
         $headers[] = "From: " . $this->fromName . " <" . $this->fromEmail . ">";
         $headers[] = "Reply-To: " . $this->fromEmail;
         $headers[] = "X-Mailer: PHP/" . phpversion();
@@ -198,15 +241,22 @@ class EmailServiceSMTP
 
         try {
             $result = mail($to, $subject, $message, $headersString);
-            error_log(
-                "Local email sent to: $to, Result: " .
-                    ($result ? "success" : "failed"),
-            );
+            error_log("Local email sent to: $to, Result: " . ($result ? "success" : "failed"));
             return $result;
         } catch (Exception $e) {
             error_log("Local email sending failed: " . $e->getMessage());
             return false;
         }
+    }
+
+    private function canConnect($host, $port, $timeout = 0.5)
+    {
+        $errno = 0; $errstr = '';
+        try {
+            $fp = @fsockopen($host, (int)$port, $errno, $errstr, $timeout);
+            if (is_resource($fp)) { fclose($fp); return true; }
+        } catch (Exception $e) { /* ignore */ }
+        return false;
     }
 
     /**

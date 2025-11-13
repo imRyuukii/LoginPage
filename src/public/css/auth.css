@@ -56,8 +56,8 @@
   color: var(--text);
   cursor: pointer;
 }
-.input-action:hover { border-color: var(--accent); }
-.input-action:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.input-action:hover { border-color: var(--primary); }
+.input-action:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 /* Actions row */
 .form-actions {

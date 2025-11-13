@@ -15,9 +15,11 @@ session_start();
 require_once '../models/user-functions-db.php';
 require_once '../security/csrf.php';
 require_once __DIR__ . '/../security/headers.php';
+require_once __DIR__ . '/../security/session_guard.php';
 csrf_ensure_initialized();
 apply_default_security_headers();
 apply_sensitive_nocache();
+session_enforce_password_rotation();
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -34,6 +36,10 @@ if ($role !== 'admin') {
     http_response_code(403);
     exit('Forbidden');
 }
+if (empty($currentUser['twofa_enabled'])) {
+    header('Location: /LoginPage/src/app/controllers/enable-2fa.php');
+    exit;
+}
 
 $userId = filter_input(INPUT_POST, 'user_id', FILTER_VALIDATE_INT);
 if (!$userId) {
@@ -48,6 +54,7 @@ if (!empty($currentUser['id']) && (int)$currentUser['id'] === (int)$userId) {
 }
 
 if (deleteUser((int)$userId)) {
+    recordAdminAudit((int)$currentUser['id'], 'delete_user', (int)$userId, [ 'ip' => $_SERVER['REMOTE_ADDR'] ?? null ]);
     header('Location: /LoginPage/src/app/controllers/profile.php?msg=deleted');
     exit;
 } else {

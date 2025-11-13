@@ -39,12 +39,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
     if ($user) {
         // Check if email is verified
         if (!$user["email_verified"]) {
-            $error =
-                "Please verify your email address before logging in. Check your email for the verification link.";
-            // Record failed attempt (email not verified)
+            $error = "Please verify your email address before logging in. Check your email for the verification link.";
             $rateLimiter->recordAttempt("login");
         } else {
-            // SUCCESS! Clear rate limits
+            // If 2FA is enabled for this user, require TOTP before full login
+            if (!empty($user['twofa_enabled']) && !empty($user['totp_secret'])) {
+                // Stash pending login state (expires after 5 minutes)
+                $_SESSION['2fa_user_id'] = (int)$user['id'];
+                $_SESSION['2fa_expires_at'] = time() + 300;
+                $_SESSION['2fa_context'] = [
+                    'ip' => $_SERVER['REMOTE_ADDR'] ?? null,
+                    'ua' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+                ];
+                // Do not clear rate limits yet; only after successful TOTP
+                header('Location: ./twofactor.php');
+                exit();
+            }
+
+            // SUCCESS with no 2FA: Clear rate limits
             $rateLimiter->clearAttempts("login");
 
             // Update last seen timestamps
@@ -66,7 +78,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
                 "name" => $user["name"],
                 "email" => $user["email"],
                 "role" => $user["role"],
+                'totp_secret' => $user['totp_secret'] ?? null,
+                'twofa_enabled' => (int)($user['twofa_enabled'] ?? 0),
             ];
+            $_SESSION['issued_at'] = time();
             header("Location: ./profile.php");
             exit();
         }
@@ -101,12 +116,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
 	<meta name="description" content="Login to your account - Secure authentication with email verification">
 	<meta name="robots" content="noindex, nofollow">
 	<meta name="theme-color" content="#124e66">
-	<title>Login - LoginPage System</title>
+	<title>Sulfur • Login</title>
 	<link rel="icon" type="image/png" sizes="32x32" href="/LoginPage/src/public/images/logo.png">
 	<link rel="apple-touch-icon" href="/LoginPage/src/public/images/logo.png">
     <link rel="stylesheet" href="/LoginPage/src/public/css/style.css?v=<?php echo filemtime(__DIR__ . "/../../public/css/style.css"); ?>">
 	<script src="/LoginPage/src/public/js/toast.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/toast.js"); ?>" defer></script>
 	<script src="/LoginPage/src/public/js/form-utils.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/form-utils.js"); ?>" defer></script>
+	<script src="/LoginPage/src/public/js/auth-ui.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/auth-ui.js"); ?>" defer></script>
 </head>
 <body>
 	<?php $NAV_BASE='../../'; include __DIR__ . '/../../public/partials/navbar.php'; ?>
@@ -170,115 +186,5 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
 		</div>
 	</div>
 	<div class="demo-warning">*This is a demo version of the website</div>
-    <script>
-    (function() {
-        // Theme toggle
-        const root = document.documentElement;
-        const stored = localStorage.getItem('theme');
-        const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
-        const initial = stored || (prefersLight ? 'light' : 'dark');
-        if (initial === 'light') {
-            root.setAttribute('data-theme', 'light');
-        } else {
-            root.removeAttribute('data-theme');
-        }
-        const btn = document.getElementById('themeToggle');
-
-        function setIcon() {
-            const isLight = root.getAttribute('data-theme') === 'light';
-            btn.textContent = isLight ? '☀️' : '🌙';
-            btn.title = isLight ? 'Switch to dark mode' : 'Switch to light mode';
-        }
-        setIcon();
-        btn.addEventListener('click', function() {
-            document.body.classList.add('theme-transition');
-            const isLight = root.getAttribute('data-theme') === 'light';
-            if (isLight) {
-                root.removeAttribute('data-theme');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                root.setAttribute('data-theme', 'light');
-                localStorage.setItem('theme', 'light');
-            }
-            setIcon();
-            window.setTimeout(function(){
-                document.body.classList.remove('theme-transition');
-            }, 320);
-        });
-
-        // Password show/hide toggle
-        function installPasswordToggle(inputId, toggleId) {
-            const input = document.getElementById(inputId);
-            const toggle = document.getElementById(toggleId);
-            if (!input || !toggle) return;
-            toggle.addEventListener('click', function(){
-                const isPassword = input.getAttribute('type') === 'password';
-                input.setAttribute('type', isPassword ? 'text' : 'password');
-                toggle.innerHTML = isPassword ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
-                toggle.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
-            });
-        }
-
-        // Show error as toast if present
-        <?php if (!empty($error)): ?>
-        window.addEventListener('DOMContentLoaded', function() {
-            if (window.Toast) {
-                Toast.error(<?php echo json_encode($error); ?>, 6000);
-            }
-        });
-        <?php endif; ?>
-
-        // Form validation and loading state
-        window.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('loginForm');
-            const loginInput = document.getElementById('login');
-            const passwordInput = document.getElementById('password');
-
-            if (!form || !window.FormUtils) return;
-
-            // Real-time validation
-            loginInput.addEventListener('blur', function() {
-                const value = loginInput.value.trim();
-                if (value.length === 0) {
-                    FormUtils.showValidationFeedback(loginInput, false, '✗ Username or email is required');
-                } else if (value.length < 3) {
-                    FormUtils.showValidationFeedback(loginInput, false, '✗ At least 3 characters required');
-                } else {
-                    FormUtils.showValidationFeedback(loginInput, true, '✓ Valid');
-                }
-            });
-
-            passwordInput.addEventListener('blur', function() {
-                const value = passwordInput.value;
-                if (value.length === 0) {
-                    FormUtils.showValidationFeedback(passwordInput, false, '✗ Password is required');
-                } else if (value.length < 6) {
-                    FormUtils.showValidationFeedback(passwordInput, false, '✗ Password too short');
-                } else {
-                    FormUtils.showValidationFeedback(passwordInput, true, '✓ Valid');
-                }
-            });
-
-            // Clear validation on input
-            loginInput.addEventListener('input', function() {
-                const feedback = loginInput.parentNode.querySelector('.validation-feedback');
-                if (feedback) feedback.remove();
-                loginInput.classList.remove('input-valid', 'input-invalid');
-            });
-
-            passwordInput.addEventListener('input', function() {
-                const feedback = passwordInput.parentNode.querySelector('.validation-feedback');
-                if (feedback) feedback.remove();
-                passwordInput.classList.remove('input-valid', 'input-invalid');
-            });
-
-            // Prevent double submission
-            FormUtils.preventDoubleSubmit(form);
-
-            // Install password toggle
-            installPasswordToggle('password', 'togglePassword');
-        });
-    })();
-    </script>
 </body>
 </html>

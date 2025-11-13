@@ -1,0 +1,13 @@
+# Disable script execution in profile-pictures upload directory
+Options -ExecCGI
+
+<IfModule mod_php.c>
+  php_flag engine off
+</IfModule>
+
+RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .phps
+RemoveType .php .phtml .php3 .php4 .php5 .php7 .phps
+
+<FilesMatch "\.(php|phtml|php3|php4|php5|php7|phps|cgi|pl)$">
+  Require all denied
+</FilesMatch>

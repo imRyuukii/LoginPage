@@ -63,11 +63,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
                     $emailService = new EmailServiceSMTP();
 
                     // Configure real email sending from environment variables if available
-                    $smtpHost = getenv('SMTP_HOST') ?: null;
-                    $smtpPort = getenv('SMTP_PORT') ?: null;
-                    $smtpUser = getenv('SMTP_USERNAME') ?: null;
-                    $smtpPass = getenv('SMTP_PASSWORD') ?: null;
-                    $smtpFrom = getenv('SMTP_FROM_EMAIL') ?: null;
+                    $get = function($k) {
+                        $v = getenv($k);
+                        if ($v === false || $v === '' || $v === null) { $v = $_ENV[$k] ?? null; }
+                        if ($v === null || $v === '') { $v = $_SERVER[$k] ?? null; }
+                        return $v !== '' ? $v : null;
+                    };
+                    $smtpHost = $get('SMTP_HOST');
+                    $smtpPort = $get('SMTP_PORT');
+                    $smtpUser = $get('SMTP_USERNAME');
+                    $smtpPass = $get('SMTP_PASSWORD');
+                    $smtpFrom = $get('SMTP_FROM_EMAIL') ?: $smtpUser; // default From to username if not provided
                     if ($smtpHost && $smtpPort && $smtpUser && $smtpPass && $smtpFrom) {
                         $emailService->enableRealEmails(
                             $smtpHost,
@@ -119,12 +125,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
     <meta name="description" content="Create your account - Secure registration with email verification">
     <meta name="robots" content="noindex, nofollow">
     	<meta name="theme-color" content="#124e66">
-    <title>Register - LoginPage System</title>
+    <title>Sulfur • Register</title>
     <link rel="icon" type="image/png" sizes="32x32" href="../../public/images/logo.png">
     <link rel="apple-touch-icon" href="../../public/images/logo.png">
     <link rel="stylesheet" href="../../public/css/style.css?v=<?php echo filemtime(__DIR__ . "/../../public/css/style.css"); ?>">
     <script src="../../public/js/toast.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/toast.js"); ?>" defer></script>
     <script src="../../public/js/form-utils.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/form-utils.js"); ?>" defer></script>
+    <script src="../../public/js/auth-ui.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/auth-ui.js"); ?>" defer></script>
 </head>
 <body>
     <?php $NAV_BASE='../../'; include __DIR__ . '/../../public/partials/navbar.php'; ?>
@@ -169,13 +176,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
 
                     <label for="password">Password</label>
                     <div class="input-wrap">
-                      <input type="password" id="password" name="password" required>
+                      <input type="password" id="password" name="password" required minlength="8">
                       <button type="button" class="input-action" id="togglePasswordReg" aria-label="Show password"><i class="fa-solid fa-eye"></i></button>
                     </div>
 
                     <label for="confirm_password">Confirm Password</label>
                     <div class="input-wrap">
-                      <input type="password" id="confirm_password" name="confirm_password" required>
+                      <input type="password" id="confirm_password" name="confirm_password" required minlength="8">
                       <button type="button" class="input-action" id="toggleConfirmReg" aria-label="Show password"><i class="fa-solid fa-eye"></i></button>
                     </div>
 
@@ -204,114 +211,5 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
         </div>
     </div>
     <div class="demo-warning">*This is a demo version of the website</div>
-    <script>
-    (function() {
-        const root = document.documentElement;
-        const stored = localStorage.getItem('theme');
-        const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
-        const initial = stored || (prefersLight ? 'light' : 'dark');
-        if (initial === 'light') {
-            root.setAttribute('data-theme', 'light');
-        } else {
-            root.removeAttribute('data-theme');
-        }
-        const btn = document.getElementById('themeToggle');
-
-        function setIcon() {
-            const isLight = root.getAttribute('data-theme') === 'light';
-            btn.textContent = isLight ? '☀️' : '🌙';
-            btn.title = isLight ? 'Switch to dark mode' : 'Switch to light mode';
-        }
-        setIcon();
-        btn.addEventListener('click', function() {
-            document.body.classList.add('theme-transition');
-            const isLight = root.getAttribute('data-theme') === 'light';
-            if (isLight) {
-                root.removeAttribute('data-theme');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                root.setAttribute('data-theme', 'light');
-                localStorage.setItem('theme', 'light');
-            }
-            setIcon();
-            window.setTimeout(function(){
-                document.body.classList.remove('theme-transition');
-            }, 320);
-        });
-    })();
-    </script>
 </body>
 </html>
-    <script>
-    // Enhanced registration form with validation
-    window.addEventListener('DOMContentLoaded', function() {
-        // Show success/error as toast
-        <?php if (!empty($success)): ?>
-        if (window.Toast) {
-            Toast.success(<?php echo json_encode($success); ?>, 8000);
-        }
-        <?php endif; ?>
-
-        <?php if (!empty($error)): ?>
-        if (window.Toast) {
-            Toast.error(<?php echo json_encode($error); ?>, 5000);
-        }
-        <?php endif; ?>
-
-        // Setup form validation
-        if (!window.FormUtils) return;
-
-        const usernameInput = document.getElementById('username');
-        const emailInput = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
-        const confirmPasswordInput = document.getElementById('confirm_password');
-        const form = document.querySelector('form');
-
-        // Username validation
-        if (usernameInput) {
-            FormUtils.setupUsernameValidation(usernameInput);
-        }
-
-        // Email validation
-        if (emailInput) {
-            FormUtils.setupEmailValidation(emailInput);
-        }
-
-        // Password strength validation
-        if (passwordInput) {
-            FormUtils.setupPasswordValidation(passwordInput, true);
-        }
-
-        // Password confirmation validation
-        if (passwordInput && confirmPasswordInput) {
-            FormUtils.setupPasswordConfirmation(passwordInput, confirmPasswordInput);
-        }
-
-        // Prevent double submission
-        if (form) {
-            FormUtils.preventDoubleSubmit(form);
-        }
-
-        // Password show/hide toggles
-        var t1 = document.getElementById('togglePasswordReg');
-        var p1 = document.getElementById('password');
-        if (t1 && p1) {
-            t1.addEventListener('click', function(){
-                var isPwd = p1.getAttribute('type') === 'password';
-                p1.setAttribute('type', isPwd ? 'text' : 'password');
-                t1.innerHTML = isPwd ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
-                t1.setAttribute('aria-label', isPwd ? 'Hide password' : 'Show password');
-            });
-        }
-        var t2 = document.getElementById('toggleConfirmReg');
-        var p2 = document.getElementById('confirm_password');
-        if (t2 && p2) {
-            t2.addEventListener('click', function(){
-                var isPwd = p2.getAttribute('type') === 'password';
-                p2.setAttribute('type', isPwd ? 'text' : 'password');
-                t2.innerHTML = isPwd ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
-                t2.setAttribute('aria-label', isPwd ? 'Hide password' : 'Show password');
-            });
-        }
-    });
-    </script>

@@ -79,10 +79,10 @@ function registerUser(
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         return ["success" => false, "message" => "Invalid email format"];
     }
-    if (strlen($password) < 6) {
+    if (strlen($password) < 8) {
         return [
             "success" => false,
-            "message" => "Password must be at least 6 characters",
+            "message" => "Password must be at least 8 characters",
         ];
     }
     if (findUserByUsername($username)) {
@@ -437,6 +437,54 @@ function cleanupExpiredTokens(): int
     }
 }
 
+// Email Change Functions
+
+function createEmailChangeRequest(int $userId, string $newEmail): array
+{
+    if (!filter_var($newEmail, FILTER_VALIDATE_EMAIL)) {
+        return [ 'success' => false, 'message' => 'Invalid email address' ];
+    }
+    try {
+        global $db;
+        // ensure email not in use
+        $exists = findUserByEmail($newEmail);
+        if ($exists) {
+            return [ 'success' => false, 'message' => 'Email already in use' ];
+        }
+        $token = bin2hex(random_bytes(32));
+        $expiresAt = date('Y-m-d H:i:s', strtotime('+2 hours'));
+        // Remove old requests
+        $db->query('DELETE FROM email_changes WHERE user_id = ?', [$userId]);
+        $db->query('INSERT INTO email_changes (user_id, new_email, token, expires_at) VALUES (?, ?, ?, ?)', [
+            $userId, $newEmail, $token, $expiresAt
+        ]);
+        return [ 'success' => true, 'token' => $token, 'new_email' => $newEmail ];
+    } catch (Exception $e) {
+        error_log('createEmailChangeRequest failed: ' . $e->getMessage());
+        return [ 'success' => false, 'message' => 'Failed to create email change request' ];
+    }
+}
+
+function verifyEmailChangeTokenAndApply(string $token): array
+{
+    try {
+        global $db;
+        $stmt = $db->query('SELECT * FROM email_changes WHERE token = ? AND expires_at > NOW()', [$token]);
+        $row = $stmt->fetch();
+        if (!$row) {
+            return [ 'success' => false, 'message' => 'Invalid or expired token' ];
+        }
+        // Update user's email
+        $db->query('UPDATE users SET email = ? WHERE id = ?', [$row['new_email'], $row['user_id']]);
+        // Remove request
+        $db->query('DELETE FROM email_changes WHERE token = ?', [$token]);
+        return [ 'success' => true, 'user_id' => (int)$row['user_id'], 'email' => $row['new_email'] ];
+    } catch (Exception $e) {
+        error_log('verifyEmailChangeTokenAndApply failed: ' . $e->getMessage());
+        return [ 'success' => false, 'message' => 'Failed to apply email change' ];
+    }
+}
+
 // Password Reset Functions
 
 /**
@@ -556,10 +604,10 @@ function resetUserPassword(string $token, string $newPassword): array
         $user = $tokenValidation["user"];
 
         // Validate password strength
-        if (strlen($newPassword) < 6) {
+        if (strlen($newPassword) < 8) {
             return [
                 "success" => false,
-                "message" => "Password must be at least 6 characters long",
+                "message" => "Password must be at least 8 characters long",
             ];
         }
 
@@ -658,6 +706,27 @@ function getLastActiveFormatted($lastActive, $lastActivity = null): string
 // Login events tracking
 // =========================
 /**
+ * Record an admin audit event
+ */
+function recordAdminAudit(int $actorId, string $action, ?int $targetUserId = null, ?array $meta = null): bool
+{
+    try {
+        global $db;
+        $metaJson = $meta ? json_encode($meta, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : null;
+        $db->query('INSERT INTO admin_audit (actor_id, action, target_user_id, meta) VALUES (?, ?, ?, ?)', [
+            $actorId,
+            substr($action, 0, 64),
+            $targetUserId,
+            $metaJson,
+        ]);
+        return true;
+    } catch (Exception $e) {
+        error_log('recordAdminAudit failed: ' . $e->getMessage());
+        return false;
+    }
+}
+
+/**
  * Record a successful login event for analytics.
  */
 function recordLoginEvent(int $userId, ?string $ip = null, ?string $userAgent = null): bool
@@ -682,6 +751,75 @@ function recordLoginEvent(int $userId, ?string $ip = null, ?string $userAgent = 
 // =========================
 // Profile editing helpers
 // =========================
+
+// 2FA helpers
+function generateTwoFactorRecoveryCodes(int $userId, int $count = 10): array {
+    try {
+        global $db;
+        // Clear old codes
+        $db->query('DELETE FROM twofa_recovery_codes WHERE user_id = ?', [$userId]);
+        $codes = [];
+        for ($i = 0; $i < $count; $i++) {
+            // 10-char alnum blocks like XXXX-XXXX-XX
+            $raw = bin2hex(random_bytes(5)); // 10 hex chars
+            $pretty = strtoupper(substr($raw, 0, 4) . '-' . substr($raw, 4, 4) . '-' . substr($raw, 8, 2));
+            $hash = password_hash($pretty, PASSWORD_DEFAULT);
+            $db->query('INSERT INTO twofa_recovery_codes (user_id, code_hash) VALUES (?, ?)', [$userId, $hash]);
+            $codes[] = $pretty;
+        }
+        return $codes; // plaintext codes to show once
+    } catch (Exception $e) {
+        error_log('generateTwoFactorRecoveryCodes failed: ' . $e->getMessage());
+        return [];
+    }
+}
+function verifyTwoFactorRecoveryCode(int $userId, string $code): bool {
+    try {
+        global $db;
+        $stmt = $db->query('SELECT id, code_hash FROM twofa_recovery_codes WHERE user_id = ? AND used_at IS NULL', [$userId]);
+        $rows = $stmt->fetchAll();
+        foreach ($rows as $row) {
+            if (password_verify($code, $row['code_hash'])) {
+                $db->query('UPDATE twofa_recovery_codes SET used_at = NOW() WHERE id = ?', [(int)$row['id']]);
+                return true;
+            }
+        }
+        return false;
+    } catch (Exception $e) {
+        error_log('verifyTwoFactorRecoveryCode failed: ' . $e->getMessage());
+        return false;
+    }
+}
+function setUserTwoFactorSecret(int $userId, string $base32Secret): bool {
+    try {
+        global $db;
+        $db->query('UPDATE users SET totp_secret = ?, twofa_enabled = 0 WHERE id = ?', [$base32Secret, $userId]);
+        return true;
+    } catch (Exception $e) {
+        error_log('setUserTwoFactorSecret failed: ' . $e->getMessage());
+        return false;
+    }
+}
+function enableUserTwoFactor(int $userId): bool {
+    try {
+        global $db;
+        $db->query('UPDATE users SET twofa_enabled = 1 WHERE id = ?', [$userId]);
+        return true;
+    } catch (Exception $e) {
+        error_log('enableUserTwoFactor failed: ' . $e->getMessage());
+        return false;
+    }
+}
+function disableUserTwoFactor(int $userId): bool {
+    try {
+        global $db;
+        $db->query('UPDATE users SET twofa_enabled = 0, totp_secret = NULL WHERE id = ?', [$userId]);
+        return true;
+    } catch (Exception $e) {
+        error_log('disableUserTwoFactor failed: ' . $e->getMessage());
+        return false;
+    }
+}
 /**
  * Update user's public profile (username and display name)
  */
@@ -735,7 +873,17 @@ function changeUserPassword(int $userId, string $currentPassword, string $newPas
         }
 
         $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
-        $db->query('UPDATE users SET password_hash = ?, password_reset_at = NOW() WHERE id = ?', [$newHash, $userId]);
+        // Try to update with password_reset_at, fallback if column doesn't exist
+        try {
+            $db->query('UPDATE users SET password_hash = ?, password_reset_at = NOW() WHERE id = ?', [$newHash, $userId]);
+        } catch (Exception $e1) {
+            // Fallback: some schemas may not have password_reset_at
+            try {
+                $db->query('UPDATE users SET password_hash = ? WHERE id = ?', [$newHash, $userId]);
+            } catch (Exception $e2) {
+                throw $e2; // bubble up to outer catch
+            }
+        }
         return [ 'success' => true, 'message' => 'Password updated successfully' ];
     } catch (Exception $e) {
         error_log('changeUserPassword failed: ' . $e->getMessage());

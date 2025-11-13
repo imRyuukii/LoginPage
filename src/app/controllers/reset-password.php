@@ -54,8 +54,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $validToken) {
 
     if (empty($newPassword)) {
         $error = "Please enter a new password.";
-    } elseif (strlen($newPassword) < 6) {
-        $error = "Password must be at least 6 characters long.";
+    } elseif (strlen($newPassword) < 8) {
+        $error = "Password must be at least 8 characters long.";
     } elseif ($newPassword !== $confirmPassword) {
         $error = "Passwords do not match.";
     } else {
@@ -76,9 +76,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $validToken) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Password - LoginPage</title>
+    <title>Sulfur • Reset Password</title>
     <link rel="icon" type="image/png" href="../../public/images/logo.png">
     <link rel="stylesheet" href="../../public/css/style.css?v=<?php echo filemtime(__DIR__ . "/../../public/css/style.css"); ?>">
+    <script src="../../public/js/toast.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/toast.js"); ?>" defer></script>
+    <script src="../../public/js/form-utils.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/form-utils.js"); ?>" defer></script>
+    <script src="../../public/js/auth-ui.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/auth-ui.js"); ?>" defer></script>
+    <script src="../../public/js/reset-password.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/reset-password.js"); ?>" defer></script>
 </head>
 <body>
     <?php $NAV_BASE='../../'; include __DIR__ . '/../../public/partials/navbar.php'; ?>
@@ -151,7 +155,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $validToken) {
                     <label for="password">New Password</label>
                     <div class="input-wrap">
                       <input type="password" id="password" name="password" required
-                           minlength="6" placeholder="Enter your new password"
+                           minlength="8" placeholder="Enter your new password"
                            autocomplete="new-password">
                       <button type="button" class="input-action" id="togglePasswordReset" aria-label="Show password"><i class="fa-solid fa-eye"></i></button>
                     </div>
@@ -159,7 +163,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $validToken) {
                     <label for="confirm_password">Confirm New Password</label>
                     <div class="input-wrap">
                       <input type="password" id="confirm_password" name="confirm_password" required
-                           minlength="6" placeholder="Confirm your new password"
+                           minlength="8" placeholder="Confirm your new password"
                            autocomplete="new-password">
                       <button type="button" class="input-action" id="toggleConfirmReset" aria-label="Show password"><i class="fa-solid fa-eye"></i></button>
                     </div>
@@ -202,138 +206,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $validToken) {
     </div>
     <div class="demo-warning">*This is a demo version of the website</div>
 
-    <script>
-    (function() {
-        // Theme toggle functionality
-        const root = document.documentElement;
-        const stored = localStorage.getItem('theme');
-        const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
-        const initial = stored || (prefersLight ? 'light' : 'dark');
-        if (initial === 'light') {
-            root.setAttribute('data-theme', 'light');
-        } else {
-            root.removeAttribute('data-theme');
-        }
-        const btn = document.getElementById('themeToggle');
-
-        function setIcon() {
-            const isLight = root.getAttribute('data-theme') === 'light';
-            btn.textContent = isLight ? '☀️' : '🌙';
-            btn.title = isLight ? 'Switch to dark mode' : 'Switch to light mode';
-        }
-        setIcon();
-        btn.addEventListener('click', function() {
-            document.body.classList.add('theme-transition');
-            const isLight = root.getAttribute('data-theme') === 'light';
-            if (isLight) {
-                root.removeAttribute('data-theme');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                root.setAttribute('data-theme', 'light');
-                localStorage.setItem('theme', 'light');
-            }
-            setIcon();
-            window.setTimeout(function(){
-                document.body.classList.remove('theme-transition');
-            }, 320);
-        });
-
-        // Password strength checker
-        const passwordField = document.getElementById('password');
-        const confirmField = document.getElementById('confirm_password');
-        const strengthDiv = document.getElementById('passwordStrength');
-        const strengthBar = document.getElementById('strengthBar');
-        const strengthText = document.getElementById('strengthText');
-
-        if (passwordField) {
-            passwordField.addEventListener('input', function() {
-                const password = this.value;
-                if (password.length === 0) {
-                    strengthDiv.style.display = 'none';
-                    return;
-                }
-
-                strengthDiv.style.display = 'block';
-
-                let score = 0;
-                let feedback = [];
-
-                // Length check
-                if (password.length >= 8) score += 1;
-                else feedback.push('Use at least 8 characters');
-
-                // Complexity checks
-                if (/[a-z]/.test(password)) score += 1;
-                else feedback.push('Add lowercase letters');
-
-                if (/[A-Z]/.test(password)) score += 1;
-                else feedback.push('Add uppercase letters');
-
-                if (/\d/.test(password)) score += 1;
-                else feedback.push('Add numbers');
-
-                if (/[^A-Za-z0-9]/.test(password)) score += 1;
-                else feedback.push('Add special characters');
-
-                // Update strength display
-                let strength = 'Very Weak';
-                let color = '#d47474';
-
-                if (score >= 4) {
-                    strength = 'Strong';
-                    color = '#4a9d7e';
-                } else if (score >= 3) {
-                    strength = 'Good';
-                    color = '#d4a574';
-                } else if (score >= 2) {
-                    strength = 'Fair';
-                    color = '#748d92';
-                }
-
-                strengthBar.style.width = (score * 20) + '%';
-                strengthBar.style.backgroundColor = color;
-                strengthText.textContent = strength;
-                strengthText.style.color = color;
-
-                if (feedback.length > 0) {
-                    strengthText.textContent += ' - ' + feedback.join(', ');
-                }
-            });
-
-            // Password confirmation check
-            function checkPasswordMatch() {
-                if (confirmField.value && passwordField.value !== confirmField.value) {
-                    confirmField.setCustomValidity('Passwords do not match');
-                } else {
-                    confirmField.setCustomValidity('');
-                }
-            }
-
-            passwordField.addEventListener('input', checkPasswordMatch);
-            confirmField.addEventListener('input', checkPasswordMatch);
-
-            // Show/hide toggles
-            var t1 = document.getElementById('togglePasswordReset');
-            var t2 = document.getElementById('toggleConfirmReset');
-            if (t1) {
-              t1.addEventListener('click', function(){
-                var isPwd = passwordField.getAttribute('type') === 'password';
-                passwordField.setAttribute('type', isPwd ? 'text' : 'password');
-                t1.innerHTML = isPwd ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
-                t1.setAttribute('aria-label', isPwd ? 'Hide password' : 'Show password');
-              });
-            }
-            if (t2) {
-              t2.addEventListener('click', function(){
-                var isPwd = confirmField.getAttribute('type') === 'password';
-                confirmField.setAttribute('type', isPwd ? 'text' : 'password');
-                t2.innerHTML = isPwd ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
-                t2.setAttribute('aria-label', isPwd ? 'Hide password' : 'Show password');
-              });
-            }
-        }
-    })();
-    </script>
 
     <style>
     .alert.info {

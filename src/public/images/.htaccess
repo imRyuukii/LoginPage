@@ -1,0 +1,16 @@
+# Disable script execution in static images directory
+Options -ExecCGI
+
+# Disable PHP engine if mod_php is present
+<IfModule mod_php.c>
+  php_flag engine off
+</IfModule>
+
+# Remove PHP handlers
+RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .phps
+RemoveType .php .phtml .php3 .php4 .php5 .php7 .phps
+
+# Deny access to any PHP/CGI if somehow uploaded
+<FilesMatch "\.(php|phtml|php3|php4|php5|php7|phps|cgi|pl)$">
+  Require all denied
+</FilesMatch>

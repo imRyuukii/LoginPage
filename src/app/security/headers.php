@@ -20,11 +20,12 @@ if (!function_exists('apply_default_security_headers')) {
         // CSP tuned to current assets: self-hosted JS/CSS, inline blocks, and Font Awesome via cdnjs
         $csp = [];
         $csp[] = "default-src 'self'";
-        $csp[] = "script-src 'self' 'unsafe-inline'"; // Inline scripts are used across pages
+        $csp[] = "script-src 'self'";
         $csp[] = "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com"; // Font Awesome CSS
         $csp[] = "img-src 'self' data:"; // Allow inline images (profile previews)
         $csp[] = "font-src 'self' https://cdnjs.cloudflare.com data:"; // Font Awesome fonts
         $csp[] = "connect-src 'self'"; // Heartbeat API
+        $csp[] = "object-src 'none'"; // Disallow plugins
         $csp[] = "frame-ancestors 'none'"; // Clickjacking protection
         $csp[] = "form-action 'self'";
         $csp[] = "base-uri 'self'";

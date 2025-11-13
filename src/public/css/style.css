@@ -15,19 +15,18 @@
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css');
 
 /* Import all modules */
-@import url('./reset.css?v=1');
-@import url('./variables.css?v=1');
-@import url('./layout.css?v=1');
-@import url('./typography.css?v=1');
-@import url('./buttons.css?v=1');
-@import url('./forms.css?v=1');
-@import url('./cards.css?v=1');
-@import url('./navigation.css?v=6');
-@import url('./users.css?v=1');
-@import url('./tables.css?v=1');
-@import url('./alerts.css?v=1');
-@import url('./utilities.css?v=1');
-@import url('./responsive.css?v=1');
+@import url('./reset.css');
+@import url('./variables.css?v=pal-amber-sky-2');
+@import url('./layout.css');
+@import url('./typography.css');
+@import url('./buttons.css?v=btnhover1');
+@import url('./forms.css');
+@import url('./cards.css');
+@import url('./navigation.css?v=navv11');
+@import url('./users.css');
+@import url('./tables.css');
+@import url('./alerts.css?v=alerts1');
+@import url('./utilities.css');
+@import url('./responsive.css');
 /* New modules */
-@import url('./auth.css?v=1');
-@import url('./profile-page.css?v=1');
+@import url('./auth.css?v=auth1');

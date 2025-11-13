@@ -14,8 +14,10 @@ session_start();
 require_once '../../app/models/user-functions-db.php';
 require_once '../../app/security/csrf.php';
 require_once __DIR__ . '/../../app/security/headers.php';
+require_once __DIR__ . '/../../app/security/session_guard.php';
 csrf_ensure_initialized();
 apply_default_security_headers();
+session_enforce_password_rotation();
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, no-cache, must-revalidate');
