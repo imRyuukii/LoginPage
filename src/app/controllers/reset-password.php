@@ -207,36 +207,5 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $validToken) {
     <div class="demo-warning">*This is a demo version of the website</div>
 
 
-    <style>
-    .alert.info {
-        background-color: rgba(18, 78, 102, 0.1);
-        border-color: #124e66;
-        color: #124e66;
-    }
-
-    .password-strength {
-        margin: 10px 0;
-    }
-
-    .strength-meter {
-        width: 100%;
-        height: 6px;
-        background-color: #4a5866;
-        border-radius: 3px;
-        overflow: hidden;
-        margin-bottom: 5px;
-    }
-
-    .strength-bar {
-        height: 100%;
-        width: 0%;
-        transition: width 0.3s ease, background-color 0.3s ease;
-    }
-
-    .strength-text {
-        font-size: 14px;
-        font-weight: 500;
-    }
-    </style>
 </body>
 </html>

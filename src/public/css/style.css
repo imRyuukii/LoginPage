@@ -30,3 +30,4 @@
 @import url('./responsive.css');
 /* New modules */
 @import url('./auth.css?v=auth1');
+@import url('./home.css?v=home1');

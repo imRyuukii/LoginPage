@@ -108,6 +108,12 @@
     box-shadow: var(--shadow-lg);
 }
 
+.alert.info {
+    color: var(--accent);
+    background: rgba(56, 189, 248, 0.12);
+    border-color: var(--accent);
+}
+
 /* Toast Notifications */
 .toast-container {
     position: fixed;
