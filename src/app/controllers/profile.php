@@ -74,6 +74,7 @@ if (
 	<script src="/LoginPage/src/public/js/heartbeat.js?v=<?php echo filemtime(__DIR__ . '/../../public/js/heartbeat.js'); ?>" defer></script>
     <meta name="csrf-token" content="<?php echo htmlspecialchars(csrf_token()); ?>">
     <script src="/LoginPage/src/public/js/profile-page.js?v=<?php echo filemtime(__DIR__ . '/../../public/js/profile-page.js'); ?>" defer></script>
+    <script src="/LoginPage/src/public/js/webauthn.js?v=<?php echo filemtime(__DIR__ . '/../../public/js/webauthn.js'); ?>" defer></script>
 </head>
 <body>
 	<?php
@@ -242,7 +243,14 @@ unset($_SESSION["password_error"]);
 							</div>
 						</form>
 					</div>
+
+                    <div class="profile-passkeys mt-4">
+                        <h3>Passkeys (WebAuthn)</h3>
+                        <p class="mt-1">Register a passkey on this device so you can sign in quickly and securely using your browser or OS (no password needed on this device).</p>
+                        <button type="button" class="button" id="registerPasskeyBtn">Register a passkey</button>
+                    </div>
 				</div>
+			</div>
 		</div>
 	</div>
 

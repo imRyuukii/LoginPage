@@ -116,6 +116,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
 	<meta name="description" content="Login to your account - Secure authentication with email verification">
 	<meta name="robots" content="noindex, nofollow">
 	<meta name="theme-color" content="#124e66">
+    <meta name="csrf-token" content="<?php echo htmlspecialchars(csrf_token()); ?>">
 	<title>Sulfur • Login</title>
 	<link rel="icon" type="image/png" sizes="32x32" href="/LoginPage/src/public/images/logo.png">
 	<link rel="apple-touch-icon" href="/LoginPage/src/public/images/logo.png">
@@ -123,6 +124,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
 	<script src="/LoginPage/src/public/js/toast.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/toast.js"); ?>" defer></script>
 	<script src="/LoginPage/src/public/js/form-utils.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/form-utils.js"); ?>" defer></script>
 	<script src="/LoginPage/src/public/js/auth-ui.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/auth-ui.js"); ?>" defer></script>
+	<script src="/LoginPage/src/public/js/webauthn.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/webauthn.js"); ?>" defer></script>
 </head>
 <body>
 	<?php $NAV_BASE='../../'; include __DIR__ . '/../../public/partials/navbar.php'; ?>
@@ -165,6 +167,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
          : ""; ?>>
 								<?php echo $rateLimiter->isBlocked("login") ? "Locked" : "Login"; ?>
 							</button>
+							<button class="button" type="button" id="passkeyLoginBtn">Login with passkey</button>
 							<a class="button" href="../../../index.php">Back to home</a>
 						</div>
 					</form>

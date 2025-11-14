@@ -19,19 +19,26 @@ class EmailServiceSMTP
 
     public function __construct()
     {
-        $this->fromEmail = "noreply@yoursite.com"; // Change this to your email
-        $this->fromName = "LoginPage System";
+        $this->fromEmail = "zsplitt014@gmail.com"; // Change this to your email
+        $this->fromName = "Sulfur System";
         $this->baseUrl = $this->getBaseUrl();
 
-        // SMTP Configuration - Set this up for real emails
-        $this->smtpEnabled = false; // Set to true to enable real emails
-        $this->smtpConfig = [
-            "host" => "smtp.gmail.com",
-            "port" => 587,
-            "username" => "your-gmail@gmail.com", // Your Gmail address
-            "password" => "your-app-password", // Gmail App Password (not regular password)
+        // Default SMTP configuration (Gmail-style). These can be overridden via enableRealEmails().
+        $this->smtpEnabled = false;
+        $this->smtpConfig  = [
+            "host"     => "smtp.gmail.com",
+            "port"     => 587,
+            "username" => "zsplitt014@gmail.com",
+            "password" => "ydfxbartlgrcxwri",
             "encryption" => PHPMailer::ENCRYPTION_STARTTLS,
         ];
+
+        if (
+            $this->smtpConfig["username"] !== "your-gmail@gmail.com" &&
+            $this->smtpConfig["password"] !== "your-app-password"
+        ) {
+            $this->smtpEnabled = true;
+        }
     }
 
     /**

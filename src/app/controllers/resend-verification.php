@@ -62,31 +62,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 // Create new verification token
                 $token = createEmailVerificationToken($user["id"]);
 
-                // Use the SMTP version instead
+                // Use the SMTP version (configured in EmailServiceSMTP::__construct)
                 require_once "../services/EmailServiceSMTP.php";
                 $emailService = new EmailServiceSMTP();
-
-            // Configure real email sending from environment variables (support getenv/$_ENV/$_SERVER)
-                $get = function($k) {
-                    $v = getenv($k);
-                    if ($v === false || $v === '' || $v === null) { $v = $_ENV[$k] ?? null; }
-                    if ($v === null || $v === '') { $v = $_SERVER[$k] ?? null; }
-                    return $v !== '' ? $v : null;
-                };
-                $smtpHost = $get('SMTP_HOST');
-                $smtpPort = $get('SMTP_PORT');
-                $smtpUser = $get('SMTP_USERNAME');
-                $smtpPass = $get('SMTP_PASSWORD');
-                $smtpFrom = $get('SMTP_FROM_EMAIL') ?: $smtpUser;
-                if ($smtpHost && $smtpPort && $smtpUser && $smtpPass && $smtpFrom) {
-                    $emailService->enableRealEmails(
-                        $smtpHost,
-                        (int)$smtpPort,
-                        $smtpUser,
-                        $smtpPass,
-                        $smtpFrom
-                    );
-                }
 
                 $emailSent = $emailService->sendVerificationEmail(
                     $email,

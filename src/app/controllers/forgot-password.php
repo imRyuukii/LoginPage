@@ -49,24 +49,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
             $result = createPasswordResetToken($email);
 
             if ($result["success"]) {
-                // Send password reset email
+                // Send password reset email (SMTP configured in EmailServiceSMTP::__construct)
                 $emailService = new EmailServiceSMTP();
-
-                // Configure real email sending from environment variables if available
-                $smtpHost = getenv('SMTP_HOST') ?: null;
-                $smtpPort = getenv('SMTP_PORT') ?: null;
-                $smtpUser = getenv('SMTP_USERNAME') ?: null;
-                $smtpPass = getenv('SMTP_PASSWORD') ?: null;
-                $smtpFrom = getenv('SMTP_FROM_EMAIL') ?: null;
-                if ($smtpHost && $smtpPort && $smtpUser && $smtpPass && $smtpFrom) {
-                    $emailService->enableRealEmails(
-                        $smtpHost,
-                        (int)$smtpPort,
-                        $smtpUser,
-                        $smtpPass,
-                        $smtpFrom
-                    );
-                }
 
                 $emailSent = $emailService->sendPasswordResetEmail(
                     $email,

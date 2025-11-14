@@ -122,6 +122,15 @@
     }
 }
 
+.profile-passkeys {
+    grid-column: 1 / -1;
+    text-align: center;
+}
+.profile-passkeys p {
+    max-width: 460px;
+    margin: 4px auto 10px;
+}
+
 /* Profile action buttons (Save, Change email, 2FA, Recovery) */
 .profile-action-row {
     display: grid;
