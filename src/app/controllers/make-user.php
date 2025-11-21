@@ -19,6 +19,7 @@ require_once __DIR__ . '/../security/session_guard.php';
 csrf_ensure_initialized();
 apply_default_security_headers();
 session_enforce_password_rotation();
+session_enforce_device_session();
 apply_sensitive_nocache();
 
 // Only allow POST requests

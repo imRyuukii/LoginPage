@@ -46,7 +46,7 @@ try {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sulfur • Admin Audit Log</title>
-  <link rel="icon" type="image/png" href="../../public/images/logo.png">
+  <link rel="icon" type="image/png" href="../../public/images/logo-sulfur.png">
   <link rel="stylesheet" href="../../public/css/style.css?v=<?php echo filemtime(__DIR__ . "/../../public/css/style.css"); ?>">
 </head>
 <body>

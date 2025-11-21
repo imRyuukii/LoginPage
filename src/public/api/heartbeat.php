@@ -18,6 +18,7 @@ require_once __DIR__ . '/../../app/security/session_guard.php';
 csrf_ensure_initialized();
 apply_default_security_headers();
 session_enforce_password_rotation();
+session_enforce_device_session();
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, no-cache, must-revalidate');

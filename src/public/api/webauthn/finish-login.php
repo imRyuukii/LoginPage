@@ -147,14 +147,22 @@ try {
         'email' => $user['email'],
         'role' => $user['role'],
         'totp_secret' => $user['totp_secret'] ?? null,
-        'twofa_enabled' => (int)($user['twofa_enabled'] ?? 0),
+        'twofa_enabled' => (int) ($user['twofa_enabled'] ?? 0),
     ];
     $_SESSION['issued_at'] = time();
 
     // Update activity + login event
     updateLastActive($user['id']);
     updateUserActivity($user['id']);
-    recordLoginEvent((int)$user['id'], $_SERVER['REMOTE_ADDR'] ?? null, $_SERVER['HTTP_USER_AGENT'] ?? null);
+    recordLoginEvent((int) $user['id'], $_SERVER['REMOTE_ADDR'] ?? null, $_SERVER['HTTP_USER_AGENT'] ?? null);
+
+    // Register this PHP session as an active device/session (best-effort)
+    registerUserSession(
+        (int) $user['id'],
+        session_id(),
+        $_SERVER['REMOTE_ADDR'] ?? null,
+        $_SERVER['HTTP_USER_AGENT'] ?? null,
+    );
 
     echo json_encode(['ok' => true]);
 } catch (Throwable $e) {

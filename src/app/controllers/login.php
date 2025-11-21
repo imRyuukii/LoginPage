@@ -72,6 +72,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
 
             // Regenerate session ID on login to prevent fixation
             session_regenerate_id(true);
+            // Register this PHP session as an active device/session (best-effort)
+            registerUserSession(
+                (int) $user['id'],
+                session_id(),
+                $_SERVER['REMOTE_ADDR'] ?? null,
+                $_SERVER['HTTP_USER_AGENT'] ?? null,
+            );
             $_SESSION["user"] = [
                 "id" => $user["id"],
                 "login" => $user["username"],
@@ -118,8 +125,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && empty($error)) {
 	<meta name="theme-color" content="#124e66">
     <meta name="csrf-token" content="<?php echo htmlspecialchars(csrf_token()); ?>">
 	<title>Sulfur • Login</title>
-	<link rel="icon" type="image/png" sizes="32x32" href="/LoginPage/src/public/images/logo.png">
-	<link rel="apple-touch-icon" href="/LoginPage/src/public/images/logo.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="/LoginPage/src/public/images/logo-sulfur.png">
+	<link rel="apple-touch-icon" href="/LoginPage/src/public/images/logo-sulfur.png">
     <link rel="stylesheet" href="/LoginPage/src/public/css/style.css?v=<?php echo filemtime(__DIR__ . "/../../public/css/style.css"); ?>">
 	<script src="/LoginPage/src/public/js/toast.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/toast.js"); ?>" defer></script>
 	<script src="/LoginPage/src/public/js/form-utils.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/form-utils.js"); ?>" defer></script>

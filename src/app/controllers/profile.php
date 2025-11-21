@@ -19,6 +19,7 @@ require_once __DIR__ . "/../security/session_guard.php";
 csrf_ensure_initialized();
 apply_default_security_headers();
 session_enforce_password_rotation();
+session_enforce_device_session();
 
 if (!isset($_SESSION["user"])) {
     header(
@@ -66,7 +67,7 @@ if (
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Profile • Your Account</title>
-	<link rel="icon" type="image/png" href="/LoginPage/src/public/images/logo.png">
+	<link rel="icon" type="image/png" href="/LoginPage/src/public/images/logo-sulfur.png">
     <link rel="stylesheet" href="/LoginPage/src/public/css/style.css?v=<?php echo filemtime(__DIR__ . '/../../public/css/style.css'); ?>">
     <link rel="stylesheet" href="/LoginPage/src/public/css/profile-page.css?v=<?php echo filemtime(__DIR__ . '/../../public/css/profile-page.css'); ?>">
 	<script src="/LoginPage/src/public/js/toast.js?v=<?php echo filemtime(__DIR__ . '/../../public/js/toast.js'); ?>" defer></script>

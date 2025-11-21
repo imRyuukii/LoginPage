@@ -44,8 +44,15 @@ function finalize_after_2fa_success(array $user, RateLimiter $rateLimiter): void
     $rateLimiter->clearAttempts('login');
     updateLastActive($user['id']);
     updateUserActivity($user['id']);
-    recordLoginEvent((int)$user['id'], $_SERVER['REMOTE_ADDR'] ?? null, $_SERVER['HTTP_USER_AGENT'] ?? null);
+    recordLoginEvent((int) $user['id'], $_SERVER['REMOTE_ADDR'] ?? null, $_SERVER['HTTP_USER_AGENT'] ?? null);
     session_regenerate_id(true);
+    // Register this PHP session as an active device/session (best-effort)
+    registerUserSession(
+        (int) $user['id'],
+        session_id(),
+        $_SERVER['REMOTE_ADDR'] ?? null,
+        $_SERVER['HTTP_USER_AGENT'] ?? null,
+    );
     $_SESSION['user'] = [
         'id' => $user['id'],
         'login' => $user['username'],
@@ -53,7 +60,7 @@ function finalize_after_2fa_success(array $user, RateLimiter $rateLimiter): void
         'email' => $user['email'],
         'role' => $user['role'],
         'totp_secret' => $user['totp_secret'],
-        'twofa_enabled' => (int)$user['twofa_enabled'],
+        'twofa_enabled' => (int) $user['twofa_enabled'],
     ];
     $_SESSION['issued_at'] = time();
     unset($_SESSION['2fa_user_id'], $_SESSION['2fa_expires_at'], $_SESSION['2fa_context']);
@@ -89,7 +96,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sulfur • Two‑Factor Authentication</title>
-    <link rel="icon" type="image/png" href="../../public/images/logo.png">
+    <link rel="icon" type="image/png" href="../../public/images/logo-sulfur.png">
     <link rel="stylesheet" href="../../public/css/style.css?v=<?php echo filemtime(__DIR__ . "/../../public/css/style.css"); ?>">
 </head>
 <body>

@@ -60,15 +60,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 	<meta name="robots" content="noindex, nofollow">
 	<meta name="theme-color" content="#8b5cf6">
 	<title>Login - LoginPage System</title>
-	<link rel="icon" type="image/png" sizes="32x32" href="../../public/images/logo.png">
-	<link rel="apple-touch-icon" href="../../public/images/logo.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="../../public/images/logo-sulfur.png">
+	<link rel="apple-touch-icon" href="../../public/images/logo-sulfur.png">
     <link rel="stylesheet" href="../../public/css/style.css?v=<?php echo time(); ?>">
 	<script src="../../public/js/toast.js" defer></script>
 	<script src="../../public/js/form-utils.js" defer></script>
 </head>
 <body>
 	<button class="theme-toggle" id="themeToggle" aria-label="Toggle theme"></button>
-	<img src="../../public/images/logo.png" alt="Logo" class="logo-website-top-left">
+	<img src="../../public/images/logo-sulfur.png" alt="Logo" class="logo-website-top-left">
 	<div class="logo-shadow"></div>
 	<div class="container page">
 		<div class="card">

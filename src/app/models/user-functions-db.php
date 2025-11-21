@@ -703,7 +703,7 @@ function getLastActiveFormatted($lastActive, $lastActivity = null): string
 
 
 // =========================
-// Login events tracking
+// Login events & session tracking
 // =========================
 /**
  * Record an admin audit event
@@ -745,6 +745,137 @@ function recordLoginEvent(int $userId, ?string $ip = null, ?string $userAgent = 
         // If table doesn't exist or any other failure, log and continue (should not block login)
         error_log("recordLoginEvent failed: " . $e->getMessage());
         return false;
+    }
+}
+
+/**
+ * Register the current PHP session as an active user session (device).
+ * Best-effort: failures should not break login.
+ */
+function registerUserSession(int $userId, string $sessionId, ?string $ip = null, ?string $userAgent = null): void
+{
+    try {
+        global $db;
+        if ($sessionId === '') {
+            return;
+        }
+        $ip = $ip !== null ? substr($ip, 0, 45) : null;
+        $userAgent = $userAgent !== null ? substr($userAgent, 0, 255) : null;
+        // Either insert or update existing row for this session_id
+        $db->query(
+            'INSERT INTO user_sessions (user_id, session_id, ip_address, user_agent, last_seen_at, revoked_at)
+             VALUES (?, ?, ?, ?, NOW(), NULL)
+             ON DUPLICATE KEY UPDATE user_id = VALUES(user_id), ip_address = VALUES(ip_address), user_agent = VALUES(user_agent), last_seen_at = NOW(), revoked_at = NULL',
+            [$userId, $sessionId, $ip, $userAgent]
+        );
+    } catch (Exception $e) {
+        error_log('registerUserSession failed: ' . $e->getMessage());
+    }
+}
+
+/**
+ * For each authenticated request, touch last_seen_at and check if the session was revoked.
+ * Returns true if the session is still valid (not revoked), false if revoked.
+ */
+function touchAndCheckUserSession(int $userId, string $sessionId): bool
+{
+    try {
+        global $db;
+        if ($sessionId === '') {
+            return true; // nothing to check
+        }
+        $stmt = $db->query(
+            'SELECT id, revoked_at FROM user_sessions WHERE session_id = ? AND user_id = ?',
+            [$sessionId, $userId]
+        );
+        $row = $stmt->fetch();
+        if (!$row) {
+            // No row yet (older session or tracking disabled) – fail open
+            return true;
+        }
+        if (!empty($row['revoked_at'])) {
+            return false;
+        }
+        $db->query('UPDATE user_sessions SET last_seen_at = NOW() WHERE id = ?', [(int)$row['id']]);
+        return true;
+    } catch (Exception $e) {
+        error_log('touchAndCheckUserSession failed: ' . $e->getMessage());
+        return true; // fail open on DB issues
+    }
+}
+
+/**
+ * Active sessions for a user (non-revoked), newest first.
+ */
+function getActiveSessionsForUser(int $userId): array
+{
+    try {
+        global $db;
+        $stmt = $db->query(
+            'SELECT id, session_id, ip_address, user_agent, created_at, last_seen_at, revoked_at
+             FROM user_sessions
+             WHERE user_id = ? AND revoked_at IS NULL
+             ORDER BY COALESCE(last_seen_at, created_at) DESC',
+            [$userId]
+        );
+        return $stmt->fetchAll();
+    } catch (Exception $e) {
+        error_log('getActiveSessionsForUser failed: ' . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Revoke a specific session for this user.
+ */
+function revokeUserSessionById(int $userId, int $sessionRowId): bool
+{
+    try {
+        global $db;
+        $stmt = $db->query(
+            'UPDATE user_sessions SET revoked_at = NOW() WHERE id = ? AND user_id = ? AND revoked_at IS NULL',
+            [$sessionRowId, $userId]
+        );
+        return $stmt->rowCount() > 0;
+    } catch (Exception $e) {
+        error_log('revokeUserSessionById failed: ' . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Revoke all sessions for a user except the given session_id.
+ */
+function revokeOtherSessionsForUser(int $userId, string $currentSessionId): int
+{
+    try {
+        global $db;
+        $stmt = $db->query(
+            'UPDATE user_sessions SET revoked_at = NOW()
+             WHERE user_id = ? AND revoked_at IS NULL AND session_id <> ?',
+            [$userId, $currentSessionId]
+        );
+        return $stmt->rowCount();
+    } catch (Exception $e) {
+        error_log('revokeOtherSessionsForUser failed: ' . $e->getMessage());
+        return 0;
+    }
+}
+
+/**
+ * Revoke the current session for a user (used on logout).
+ */
+function revokeSessionBySessionId(int $userId, string $sessionId): void
+{
+    try {
+        global $db;
+        if ($sessionId === '') return;
+        $db->query(
+            'UPDATE user_sessions SET revoked_at = NOW() WHERE user_id = ? AND session_id = ? AND revoked_at IS NULL',
+            [$userId, $sessionId]
+        );
+    } catch (Exception $e) {
+        error_log('revokeSessionBySessionId failed: ' . $e->getMessage());
     }
 }
 

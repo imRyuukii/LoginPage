@@ -17,10 +17,13 @@ session_start();
 require_once '../models/user-functions-db.php';
 require_once '../security/csrf.php';
 require_once __DIR__ . '/../security/headers.php';
+require_once __DIR__ . '/../security/session_guard.php';
 require_once __DIR__ . '/../security/totp.php';
 csrf_ensure_initialized();
 apply_default_security_headers();
 apply_sensitive_nocache();
+session_enforce_password_rotation();
+session_enforce_device_session();
 
 if (!isset($_SESSION['user']['id'])) {
     header('Location: ./login.php');
@@ -79,7 +82,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sulfur • Enable Two‑Factor Authentication</title>
-  <link rel="icon" type="image/png" href="../../public/images/logo.png">
+  <link rel="icon" type="image/png" href="../../public/images/logo-sulfur.png">
   <link rel="stylesheet" href="../../public/css/style.css?v=<?php echo filemtime(__DIR__ . "/../../public/css/style.css"); ?>">
 </head>
 <body>

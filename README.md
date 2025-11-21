@@ -101,7 +101,7 @@ LoginPage/
 │   │   ├── 📁 css/                   # Stylesheets
 │   │   │   └── style.css              # Responsive design + themes
 │   │   ├── 📁 images/                # Images & Assets
-│   │   │   ├── logo.png               # Site logo
+│   │   │   ├── logo-sulfur.png        # Site logo
 │   │   │   ├── admin-pfp.jpg          # Admin profile picture
 │   │   │   └── user-pfp.jpg           # User profile picture
 │   │   └── 📁 js/                    # JavaScript
@@ -230,7 +230,7 @@ LoginPage/
 - **Controllers**: `action.php` (e.g., `login.php`, `register.php`)
 - **Models**: `entity-functions.php` (e.g., `user-functions.php`)
 - **API**: `endpoint.php` (e.g., `heartbeat.php`)
-- **Assets**: Descriptive names (e.g., `style.css`, `logo.png`)
+- **Assets**: Descriptive names (e.g., `style.css`, `logo-sulfur.png`)
 
 ### **Path References**
 - **From Controllers**: Use `../` to access parent directories

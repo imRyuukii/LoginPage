@@ -77,7 +77,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $validToken) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sulfur • Reset Password</title>
-    <link rel="icon" type="image/png" href="../../public/images/logo.png">
+    <link rel="icon" type="image/png" href="../../public/images/logo-sulfur.png">
     <link rel="stylesheet" href="../../public/css/style.css?v=<?php echo filemtime(__DIR__ . "/../../public/css/style.css"); ?>">
     <script src="../../public/js/toast.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/toast.js"); ?>" defer></script>
     <script src="../../public/js/form-utils.js?v=<?php echo filemtime(__DIR__ . "/../../public/js/form-utils.js"); ?>" defer></script>

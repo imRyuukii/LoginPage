@@ -55,7 +55,7 @@ $structure = [
     'Frontend Assets' => [
         'src/public/css/style.css' => 'Responsive design & themes',
         'src/public/js/heartbeat.js' => 'Real-time features',
-        'src/public/images/logo.png' => 'Site branding'
+'src/public/images/logo-sulfur.png' => 'Site branding'
     ],
     'Database Scripts' => [
         'scripts/db/schema.sql' => 'Base database schema',

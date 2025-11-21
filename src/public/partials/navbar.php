@@ -19,9 +19,8 @@ if (!function_exists('buildPath')) {
     <div class="navbar-wrapper navbar-container container">
         <!-- Brand section -->
         <div class="brand-section">
-            <a href="<?= htmlspecialchars(buildPath('index.php')) ?>" class="brand brand-link">
-                <img src="<?= htmlspecialchars(buildPath('src/public/images/logo.png')) ?>" alt="Logo" class="brand-icon brand-logo">
-                <span class="brand-name brand-title">Sulfur</span>
+            <a href="<?= htmlspecialchars(buildPath('index.php')) ?>" class="brand brand-link" aria-label="Sulfur home">
+                <img src="<?= htmlspecialchars(buildPath('src/public/images/logo-sulfur.png')) ?>" alt="Sulfur" class="brand-icon brand-logo" style="max-height:56px;">
             </a>
         </div>
 
@@ -41,6 +40,14 @@ if (!function_exists('buildPath')) {
                         <span class="nav-text">Demo</span>
                     </a>
                 </li>
+                <?php if ($isLoggedIn): ?>
+                <li role="none">
+                    <a href="<?= htmlspecialchars(buildPath('src/app/controllers/devices.php')) ?>" class="nav-item nav-link" role="menuitem">
+                        <i class="fa-solid fa-laptop" aria-hidden="true"></i>
+                        <span class="nav-text">Devices</span>
+                    </a>
+                </li>
+                <?php endif; ?>
                 <?php if ($isLoggedIn && $isAdmin): ?>
                 <li role="none">
                     <a href="<?= htmlspecialchars(buildPath('src/app/controllers/admin-audit.php')) ?>" class="nav-item nav-link" role="menuitem">

@@ -20,6 +20,7 @@ csrf_ensure_initialized();
 apply_default_security_headers();
 apply_sensitive_nocache();
 session_enforce_password_rotation();
+session_enforce_device_session();
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

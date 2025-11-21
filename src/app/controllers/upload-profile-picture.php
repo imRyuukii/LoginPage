@@ -23,6 +23,7 @@ csrf_ensure_initialized();
 apply_default_security_headers();
 apply_sensitive_nocache();
 session_enforce_password_rotation();
+session_enforce_device_session();
 csrf_require_post();
 
 // Check if user is logged in

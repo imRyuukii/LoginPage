@@ -24,8 +24,8 @@ apply_default_security_headers();
     <meta name="theme-color" content="#124e66" />
     <title>Sulfur • UX Features Demo</title>
 
-    <link rel="icon" type="image/png" sizes="32x32" href="/LoginPage/src/public/images/logo.png" />
-    <link rel="apple-touch-icon" href="/LoginPage/src/public/images/logo.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/LoginPage/src/public/images/logo-sulfur.png" />
+    <link rel="apple-touch-icon" href="/LoginPage/src/public/images/logo-sulfur.png">
 
     <link rel="stylesheet" href="/LoginPage/src/public/css/style.css?v=<?php echo filemtime(__DIR__ . '/src/public/css/style.css'); ?>" />
     <script src="/LoginPage/src/public/js/toast.js?v=<?php echo filemtime(__DIR__ . '/src/public/js/toast.js'); ?>" defer></script>

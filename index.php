@@ -15,8 +15,11 @@ session_start();
 require_once "./src/app/models/user-functions-db.php";
 require_once "./src/app/security/csrf.php";
 require_once "./src/app/security/headers.php";
+require_once "./src/app/security/session_guard.php";
 csrf_ensure_initialized();
 apply_default_security_headers();
+session_enforce_password_rotation();
+session_enforce_device_session();
 require_once "./src/config/database.php";
 $isLoggedIn = isset($_SESSION["user"]);
 
@@ -85,19 +88,19 @@ try {
     <meta property="og:type" content="website">
     <meta property="og:title" content="Sulfur • Home">
     <meta property="og:description" content="Professional authentication platform with email verification and user management">
-    <meta property="og:image" content="./src/public/images/logo.png">
+    <meta property="og:image" content="./src/public/images/logo-sulfur.png">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="Sulfur • Home">
     <meta name="twitter:description" content="Professional authentication platform with email verification and user management">
-    <meta name="twitter:image" content="./src/public/images/logo.png">
+    <meta name="twitter:image" content="./src/public/images/logo-sulfur.png">
 
     <title>Sulfur • Home</title>
 
     <!-- Favicons -->
-    <link rel="icon" type="image/png" sizes="32x32" href="./src/public/images/logo.png">
-    <link rel="apple-touch-icon" href="./src/public/images/logo.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./src/public/images/logo-sulfur.png">
+    <link rel="apple-touch-icon" href="./src/public/images/logo-sulfur.png">
 
     <link rel="stylesheet" href="src/public/css/style.css?v=<?php echo filemtime(__DIR__ . "/src/public/css/style.css"); ?>">
     <meta name="csrf-token" content="<?php echo htmlspecialchars(csrf_token()); ?>">
@@ -165,7 +168,7 @@ include __DIR__ . "/src/public/partials/navbar.php";
                 <div class="wh-right">
                     <div class="wh-orb">
                         <div class="wh-ring"></div>
-                        <img class="wh-avatar" src="./src/public/images/logo.png" alt="Sulfur">
+                        <img class="wh-avatar" src="./src/public/images/logo-sulfur.png" alt="Sulfur">
                     </div>
                 </div>
             </div>
